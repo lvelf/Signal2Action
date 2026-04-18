@@ -107,11 +107,14 @@ async def run_assess(request: AssessmentRequest, you_adapter: YouSearchAdapter) 
 
     return AssessmentResponse(
         problem_statement=request.problem_statement,
+        decomposition_summary=assessment["decomposition_summary"],
         current_state=assessment["current_state"],
         constraints=assessment["constraints"],
         dependencies=assessment["dependencies"],
         gaps=assessment["gaps"],
         modules=[FunctionalModule(**item) for item in assessment["modules"]],
+        critical_path=assessment.get("critical_path", []),
+        parallel_workstreams=assessment.get("parallel_workstreams", []),
         external_context=search_result.items if request.include_external_context else [],
         metadata=StageMetadata(
             stage="assess",

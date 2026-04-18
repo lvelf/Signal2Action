@@ -41,7 +41,13 @@ export type ReviewResponse = {
 export type FunctionalModule = {
   name: string;
   objective: string;
+  inputs: string[];
   outputs: string[];
+  recommended_approach: string;
+  priority: "high" | "medium" | "low";
+  complexity: "high" | "medium" | "low";
+  depends_on: string[];
+  include_in_deliverable: boolean;
   owner_hint: string;
 };
 
@@ -53,11 +59,14 @@ export type SearchContextItem = {
 
 export type AssessmentResponse = {
   problem_statement: string;
+  decomposition_summary: string;
   current_state: string[];
   constraints: string[];
   dependencies: string[];
   gaps: string[];
   modules: FunctionalModule[];
+  critical_path: string[];
+  parallel_workstreams: string[];
   external_context: SearchContextItem[];
   metadata: StageMetadata;
 };

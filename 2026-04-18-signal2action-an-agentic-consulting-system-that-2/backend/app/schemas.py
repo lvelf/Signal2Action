@@ -85,7 +85,13 @@ class SearchContextItem(BaseModel):
 class FunctionalModule(BaseModel):
     name: str
     objective: str
+    inputs: list[str] = Field(default_factory=list)
     outputs: list[str]
+    recommended_approach: str
+    priority: Literal["high", "medium", "low"] = "medium"
+    complexity: Literal["high", "medium", "low"] = "medium"
+    depends_on: list[str] = Field(default_factory=list)
+    include_in_deliverable: bool = True
     owner_hint: str
 
 
@@ -99,11 +105,14 @@ class AssessmentRequest(BaseModel):
 
 class AssessmentResponse(BaseModel):
     problem_statement: str
+    decomposition_summary: str
     current_state: list[str]
     constraints: list[str]
     dependencies: list[str]
     gaps: list[str]
     modules: list[FunctionalModule]
+    critical_path: list[str] = Field(default_factory=list)
+    parallel_workstreams: list[str] = Field(default_factory=list)
     external_context: list[SearchContextItem] = Field(default_factory=list)
     metadata: StageMetadata
 

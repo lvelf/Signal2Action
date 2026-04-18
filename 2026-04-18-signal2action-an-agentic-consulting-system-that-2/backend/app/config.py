@@ -22,12 +22,15 @@ class Settings(BaseSettings):
 
     baseten_api_key: str | None = None
     baseten_model_id: str | None = None
-    baseten_base_url: str = "https://api.baseten.co"
+    baseten_base_url: str = "https://inference.baseten.co/v1"
     baseten_environment: str = "production"
     baseten_endpoint: str | None = None
 
     veris_api_key: str | None = None
-    veris_endpoint: str | None = None
+    veris_backend_url: str = "https://sandbox.api.veris.ai"
+    veris_environment_id: str | None = None
+    veris_scenario_set_id: str | None = None
+    veris_simulation_timeout: int = 300
 
     demo_default_scenario: str = "margin_q3"
 

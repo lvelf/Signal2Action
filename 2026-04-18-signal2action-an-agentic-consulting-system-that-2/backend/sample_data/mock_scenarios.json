@@ -54,6 +54,7 @@
       ]
     },
     "assessment": {
+      "decomposition_summary": "The margin problem breaks into three actionable modules: establish a trusted cost view, isolate SKU-level margin dilution, and convert that diagnosis into a targeted supplier savings sprint.",
       "current_state": [
         "Margin visibility is fragmented across finance and operations reports",
         "Supplier spend is concentrated in three contracts with limited negotiation cadence",
@@ -74,23 +75,43 @@
         "Two underperforming SKUs consume disproportionate working capital",
         "Supplier negotiations are reactive instead of planned"
       ],
+      "critical_path": ["Cost Attribution Layer", "SKU Portfolio Analysis", "Supplier Negotiation Sprint"],
+      "parallel_workstreams": ["Weekly margin tracking setup"],
       "modules": [
         {
           "name": "Cost Attribution Layer",
           "objective": "Create a decision-ready view of margin drivers by SKU and product line.",
+          "inputs": ["Q3 financial report", "SKU margin export", "COGS by supplier"],
           "outputs": ["Margin bridge", "COGS driver map", "Product line baseline"],
+          "recommended_approach": "Reconcile finance and operations data into one SKU-level margin bridge before any recommendation work.",
+          "priority": "high",
+          "complexity": "medium",
+          "depends_on": [],
+          "include_in_deliverable": true,
           "owner_hint": "Finance lead"
         },
         {
           "name": "SKU Portfolio Analysis",
           "objective": "Separate strategic SKUs from margin-dilutive SKUs and identify rationalization candidates.",
+          "inputs": ["Margin bridge", "SKU volume trends", "Strategic product flags"],
           "outputs": ["SKU performance heatmap", "Discontinue/retain shortlist"],
+          "recommended_approach": "Rank SKUs by margin, strategic importance, and operational burden to identify rationalization candidates.",
+          "priority": "high",
+          "complexity": "medium",
+          "depends_on": ["Cost Attribution Layer"],
+          "include_in_deliverable": true,
           "owner_hint": "GM Product Line A"
         },
         {
           "name": "Supplier Negotiation Sprint",
           "objective": "Quantify contract renegotiation opportunities across top suppliers.",
+          "inputs": ["COGS driver map", "Supplier contract timing", "SKU cost concentration"],
           "outputs": ["Supplier priority list", "Negotiation brief", "Savings estimate"],
+          "recommended_approach": "Target the top three contracts once the cost view shows which supplier categories drive the recoverable margin gap.",
+          "priority": "high",
+          "complexity": "high",
+          "depends_on": ["Cost Attribution Layer", "SKU Portfolio Analysis"],
+          "include_in_deliverable": true,
           "owner_hint": "Procurement director"
         }
       ]
@@ -234,21 +255,36 @@
       "review_notes": ["Human reviewer deferred long-term hiring and org design decisions."]
     },
     "assessment": {
+      "decomposition_summary": "The expansion question decomposes into one market selection track and one pilot design track, with market ranking as the gating decision before GTM build-out.",
       "current_state": ["No local partnerships", "No country-specific pricing strategy", "Strong internal appetite for expansion"],
       "constraints": ["Budget limited to a pilot", "No dedicated regional team"],
       "dependencies": ["Partner sourcing", "Localized messaging", "Basic compliance review"],
       "gaps": ["Weak country-level prioritization", "No partner shortlist"],
+      "critical_path": ["Country Screening", "Pilot GTM Design"],
+      "parallel_workstreams": ["Compliance scoping", "Localization message testing"],
       "modules": [
         {
           "name": "Country Screening",
           "objective": "Rank launch markets by attractiveness and ease.",
+          "inputs": ["TAM model", "Competitor teardown", "Expansion budget ceiling"],
           "outputs": ["Country scorecard", "Launch recommendation"],
+          "recommended_approach": "Score candidate countries on market upside, speed to launch, and operating complexity before committing resources.",
+          "priority": "high",
+          "complexity": "medium",
+          "depends_on": [],
+          "include_in_deliverable": true,
           "owner_hint": "Strategy lead"
         },
         {
           "name": "Pilot GTM Design",
           "objective": "Define how the first-market pilot should be run.",
+          "inputs": ["Country scorecard", "Partner shortlist", "Localized value proposition"],
           "outputs": ["Pilot funnel", "Channel approach"],
+          "recommended_approach": "Use the chosen market to design a 90-day pilot with partner motion, messaging, and success thresholds.",
+          "priority": "high",
+          "complexity": "medium",
+          "depends_on": ["Country Screening"],
+          "include_in_deliverable": true,
           "owner_hint": "Growth lead"
         }
       ]
@@ -329,15 +365,24 @@
       "review_notes": ["Human reviewer excluded pricing and support staffing changes."]
     },
     "assessment": {
+      "decomposition_summary": "The onboarding bottleneck decomposes into process redesign, approval routing, and milestone visibility, with ownership clarity as the first gating step.",
       "current_state": ["Handoffs are manual", "Approval routing is inconsistent"],
       "constraints": ["Small ops team", "No major systems migration"],
       "dependencies": ["CS ownership alignment", "Workflow automation support"],
       "gaps": ["No visible milestone dashboard", "Duplicated intake fields"],
+      "critical_path": ["Handoff Redesign"],
+      "parallel_workstreams": ["Milestone dashboard design"],
       "modules": [
         {
           "name": "Handoff Redesign",
           "objective": "Remove operational friction between sales, CS, and implementation.",
+          "inputs": ["Support export", "Current onboarding SOP", "Approval timing data"],
           "outputs": ["New handoff SOP", "Owner matrix"],
+          "recommended_approach": "Redesign ownership and approval checkpoints before adding workflow automation so the team does not automate broken steps.",
+          "priority": "high",
+          "complexity": "medium",
+          "depends_on": [],
+          "include_in_deliverable": true,
           "owner_hint": "Ops manager"
         }
       ]
