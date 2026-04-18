@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 from pathlib import Path
 from typing import Any
@@ -13,6 +14,8 @@ from reqANA.models import (
     RequirementDocument,
     RequirementInput,
 )
+
+log = logging.getLogger("reqANA.agent")
 
 
 REQUIREMENT_SYSTEM_PROMPT = """You are a senior consulting business analyst.
@@ -178,16 +181,23 @@ class RequirementAgent:
 
         self.provider = os.getenv("MODEL_PROVIDER", "openai").lower()
         if self.provider == "baseten":
-            self.model = model 
-            # or os.getenv("BASETEN_MODEL", "deepseek-ai/DeepSeek-V3.1")
-            self.client = OpenAI(
-                base_url=os.getenv("BASETEN_BASE_URL", "https://inference.baseten.co/v1"),
-                api_key=os.environ["BASETEN_API_KEY"],
-            )
+            self.model = model or os.getenv("BASETEN_MODEL", "openai/gpt-oss-120b")
+            base_url = os.getenv("BASETEN_BASE_URL", "https://inference.baseten.co/v1")
+            api_key = os.environ.get("BASETEN_API_KEY", "")
+            if not api_key:
+                raise RuntimeError("BASETEN_API_KEY is not set in environment.")
+            if not self.model:
+                raise RuntimeError("BASETEN_MODEL is not set and no model arg provided.")
+            log.info("provider=baseten model=%s base_url=%s", self.model, base_url)
+            self.client = OpenAI(base_url=base_url, api_key=api_key)
             return
 
         if self.provider == "openai":
-            self.model = model or os.getenv("OPENAI_MODEL", "gpt-5.4-mini")
+            self.model = model or os.getenv("OPENAI_MODEL", "gpt-4o")
+            api_key = os.environ.get("OPENAI_API_KEY", "")
+            if not api_key:
+                raise RuntimeError("OPENAI_API_KEY is not set in environment.")
+            log.info("provider=openai model=%s", self.model)
             self.client = OpenAI()
             return
 
@@ -304,75 +314,99 @@ class RequirementAgent:
         return DeliveryPlan.model_validate_json(response.output_text)
 
     def _generate_with_chat_completions(self, packed_inputs: list[dict[str, Any]]) -> RequirementDocument:
+        log.info("baseten generate: model=%s", self.model)
         schema = _json_schema()
-        response = self.client.chat.completions.create(
-            model=self.model,
-            messages=[
-                {"role": "system", "content": REQUIREMENT_SYSTEM_PROMPT},
-                {
-                    "role": "user",
-                    "content": (
-                        "Create a consulting requirement document from these inputs.\n\n"
-                        "Return a single valid JSON object matching this JSON schema exactly. "
-                        "Do not wrap it in markdown.\n\n"
-                        f"JSON schema:\n{json.dumps(schema, ensure_ascii=False, indent=2)}\n\n"
-                        f"Inputs:\n{json.dumps(packed_inputs, ensure_ascii=False, indent=2)}"
-                    ),
-                },
-            ],
-            response_format={"type": "json_object"},
-            temperature=0.1,
-        )
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": REQUIREMENT_SYSTEM_PROMPT},
+                    {
+                        "role": "user",
+                        "content": (
+                            "Create a consulting requirement document from these inputs.\n\n"
+                            "Return a single valid JSON object matching this JSON schema exactly. "
+                            "Do not wrap it in markdown.\n\n"
+                            f"JSON schema:\n{json.dumps(schema, ensure_ascii=False, indent=2)}\n\n"
+                            f"Inputs:\n{json.dumps(packed_inputs, ensure_ascii=False, indent=2)}"
+                        ),
+                    },
+                ],
+                response_format={"type": "json_object"},
+                temperature=0.1,
+            )
+        except Exception as exc:
+            log.error("baseten chat.completions failed: %s: %s", type(exc).__name__, exc)
+            raise
         content = response.choices[0].message.content or ""
+        log.info("baseten generate response length: %d chars", len(content))
+        if not content.strip():
+            raise RuntimeError("Baseten returned empty content for generate step.")
         return RequirementDocument.model_validate_json(_clean_json_text(content))
 
     def _decompose_with_chat_completions(
         self,
         payload: dict[str, Any],
     ) -> FunctionDecompositionResponse:
+        log.info("baseten decompose: model=%s", self.model)
         schema = _function_schema()
-        response = self.client.chat.completions.create(
-            model=self.model,
-            messages=[
-                {"role": "system", "content": FUNCTION_SYSTEM_PROMPT},
-                {
-                    "role": "user",
-                    "content": (
-                        "Decompose this consulting requirement into functional modules.\n\n"
-                        "Return a single valid JSON object matching this JSON schema exactly. "
-                        "Do not wrap it in markdown.\n\n"
-                        f"JSON schema:\n{json.dumps(schema, ensure_ascii=False, indent=2)}\n\n"
-                        f"Requirement context:\n{json.dumps(payload, ensure_ascii=False, indent=2)}"
-                    ),
-                },
-            ],
-            response_format={"type": "json_object"},
-            temperature=0.1,
-        )
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": FUNCTION_SYSTEM_PROMPT},
+                    {
+                        "role": "user",
+                        "content": (
+                            "Decompose this consulting requirement into functional modules.\n\n"
+                            "Return a single valid JSON object matching this JSON schema exactly. "
+                            "Do not wrap it in markdown.\n\n"
+                            f"JSON schema:\n{json.dumps(schema, ensure_ascii=False, indent=2)}\n\n"
+                            f"Requirement context:\n{json.dumps(payload, ensure_ascii=False, indent=2)}"
+                        ),
+                    },
+                ],
+                response_format={"type": "json_object"},
+                temperature=0.1,
+            )
+        except Exception as exc:
+            log.error("baseten chat.completions failed: %s: %s", type(exc).__name__, exc)
+            raise
         content = response.choices[0].message.content or ""
+        log.info("baseten decompose response length: %d chars", len(content))
+        if not content.strip():
+            raise RuntimeError("Baseten returned empty content for decompose step.")
         return FunctionDecompositionResponse.model_validate_json(_clean_json_text(content))
 
     def _delivery_with_chat_completions(self, payload: dict[str, Any]) -> DeliveryPlan:
+        log.info("baseten delivery: model=%s", self.model)
         schema = _delivery_plan_schema()
-        response = self.client.chat.completions.create(
-            model=self.model,
-            messages=[
-                {"role": "system", "content": DELIVERY_SYSTEM_PROMPT},
-                {
-                    "role": "user",
-                    "content": (
-                        "Generate a consulting delivery plan from this requirement and decomposition.\n\n"
-                        "Return a single valid JSON object matching this JSON schema exactly. "
-                        "Do not wrap it in markdown.\n\n"
-                        f"JSON schema:\n{json.dumps(schema, ensure_ascii=False, indent=2)}\n\n"
-                        f"Delivery context:\n{json.dumps(payload, ensure_ascii=False, indent=2)}"
-                    ),
-                },
-            ],
-            response_format={"type": "json_object"},
-            temperature=0.2,
-        )
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": DELIVERY_SYSTEM_PROMPT},
+                    {
+                        "role": "user",
+                        "content": (
+                            "Generate a consulting delivery plan from this requirement and decomposition.\n\n"
+                            "Return a single valid JSON object matching this JSON schema exactly. "
+                            "Do not wrap it in markdown.\n\n"
+                            f"JSON schema:\n{json.dumps(schema, ensure_ascii=False, indent=2)}\n\n"
+                            f"Delivery context:\n{json.dumps(payload, ensure_ascii=False, indent=2)}"
+                        ),
+                    },
+                ],
+                response_format={"type": "json_object"},
+                temperature=0.2,
+            )
+        except Exception as exc:
+            log.error("baseten chat.completions failed: %s: %s", type(exc).__name__, exc)
+            raise
         content = response.choices[0].message.content or ""
+        log.info("baseten delivery response length: %d chars", len(content))
+        if not content.strip():
+            raise RuntimeError("Baseten returned empty content for delivery step.")
         return DeliveryPlan.model_validate_json(_clean_json_text(content))
 
 

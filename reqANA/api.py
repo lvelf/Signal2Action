@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 import os
 
@@ -7,6 +8,9 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+
+logging.basicConfig(level=logging.INFO, format="%(levelname)s [%(name)s] %(message)s")
+log = logging.getLogger("reqANA.api")
 
 from reqANA.agent import RequirementAgent, render_markdown, save_markdown
 from reqANA.delivery import build_delivery_response
@@ -200,6 +204,18 @@ async def requirements_from_mixed(
     - google_folder_ids: optional repeated Google Drive folder IDs
     - google_recursive: whether to read folders recursively
     """
+    log.info(
+        "from-mixed received: text=%r files=%d audio=%r audio_files=%d "
+        "google_token=%s google_file_ids=%s google_folder_ids=%s",
+        (text or "")[:80],
+        len(files or []),
+        audio.filename if _has_upload(audio) else None,
+        len([f for f in (audio_files or []) if _has_upload(f)]),
+        bool(google_access_token),
+        google_file_ids,
+        google_folder_ids,
+    )
+
     inputs: list[RequirementInput] = []
     if text:
         inputs.append(RequirementInput(source=IntakeSource.TEXT, content=text))
@@ -219,12 +235,17 @@ async def requirements_from_mixed(
         audio_uploads.append(audio)
     audio_uploads.extend([item for item in audio_files or [] if _has_upload(item)])
 
+    log.info("audio uploads to transcribe: %d", len(audio_uploads))
     for audio_upload in audio_uploads:
+        log.info("transcribing audio: %r (size unknown until read)", audio_upload.filename)
         try:
             transcript = await AudioTranscriber().transcribe_upload(audio_upload)
+            log.info("transcript length: %d chars", len(transcript))
         except RuntimeError as exc:
+            log.error("AudioTranscriber init failed: %s", exc)
             raise HTTPException(status_code=400, detail=str(exc)) from exc
         except Exception as exc:
+            log.error("Audio transcription error: %s", exc)
             raise HTTPException(status_code=502, detail=f"Audio transcription failed: {exc}") from exc
         inputs.append(
             RequirementInput(
@@ -235,16 +256,26 @@ async def requirements_from_mixed(
             )
         )
 
+    log.info("total inputs collected: %d", len(inputs))
     if not inputs:
-        raise HTTPException(status_code=400, detail="Provide at least one text, file, or audio input.")
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "No usable input received. Send at least one of: "
+                "'text' (form field), 'files' (file upload), 'audio'/'audio_files' (audio upload), "
+                "or Google Drive credentials with file/folder IDs."
+            ),
+        )
 
     return _generate_response(inputs)
 
 
 def _generate_response(inputs: list[RequirementInput]) -> RequirementResponse:
+    log.info("calling RequirementAgent with %d input(s): %s", len(inputs), [i.source for i in inputs])
     try:
         document = RequirementAgent().generate(inputs)
     except Exception as exc:
+        log.error("RequirementAgent.generate failed: %s: %s", type(exc).__name__, exc)
         raise HTTPException(status_code=502, detail=f"Requirement agent failed: {exc}") from exc
 
     saved_path = save_markdown(document, Path("Req_outputs"))
@@ -290,14 +321,24 @@ def _read_google_drive_uploads(
 ) -> list[RequirementInput]:
     if not google_access_token or (not google_file_ids and not google_folder_ids):
         return []
+    log.info(
+        "reading google drive: file_ids=%s folder_ids=%s recursive=%s",
+        google_file_ids,
+        google_folder_ids,
+        google_recursive,
+    )
     try:
-        return read_google_drive_inputs(
+        inputs = read_google_drive_inputs(
             access_token=google_access_token,
             file_ids=google_file_ids,
             folder_ids=google_folder_ids,
             recursive=google_recursive,
         )
+        log.info("google drive loaded %d file(s)", len(inputs))
+        return inputs
     except ValueError as exc:
+        log.error("Google Drive file type error: %s", exc)
         raise HTTPException(status_code=400, detail=f"Google Drive file error: {exc}") from exc
     except Exception as exc:
+        log.error("Google Drive import error: %s: %s", type(exc).__name__, exc)
         raise HTTPException(status_code=502, detail=f"Google Drive import failed: {exc}") from exc

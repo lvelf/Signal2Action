@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import json
+import logging
 from dataclasses import dataclass
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 from reqANA.file_loader import read_requirement_bytes
 from reqANA.models import IntakeSource, RequirementInput
+
+log = logging.getLogger("reqANA.google_drive")
 
 
 DRIVE_API_BASE = "https://www.googleapis.com/drive/v3"
@@ -55,8 +58,16 @@ def read_google_drive_inputs(
 
     inputs: list[RequirementInput] = []
     for item in files:
-        filename, raw = _download_or_export(access_token, item)
-        content = read_requirement_bytes(filename, raw)
+        log.info("downloading drive file: %s (%s)", item.name, item.mime_type)
+        try:
+            filename, raw = _download_or_export(access_token, item)
+            content = read_requirement_bytes(filename, raw)
+        except ValueError as exc:
+            log.warning("skipping unsupported drive file %r: %s", item.name, exc)
+            continue
+        except Exception as exc:
+            log.error("failed to download drive file %r: %s: %s", item.name, type(exc).__name__, exc)
+            raise
         inputs.append(
             RequirementInput(
                 source=IntakeSource.FILE,
@@ -69,6 +80,7 @@ def read_google_drive_inputs(
                 },
             )
         )
+    log.info("drive: %d/%d file(s) loaded successfully", len(inputs), len(files))
     return inputs
 
 
