@@ -1,0 +1,6 @@
+Topic	Current Problem	Requirement
+Inventory visibility	Regional teams maintain separate spreadsheets	Create unified inventory view across warehouses
+Supplier risk	No standard supplier risk score	Design supplier risk scoring model
+Demand planning	Forecasts are updated monthly	Move to weekly demand planning cadence
+Executive reporting	Reports are manually compiled	Automate executive dashboard for supply risk and stockouts
+

@@ -1,0 +1,7 @@
+Area,Current State,Needed Outcome,Priority
+Ticket Routing,Manual triage by support leads,Automated routing by issue type and customer tier,High
+Knowledge Base,Outdated articles and inconsistent tagging,Governance process for article ownership and refresh cadence,Medium
+Escalation,Slack-based escalation with no SLA tracking,Formal escalation path with SLA reporting,High
+Reporting,Weekly spreadsheet summaries,Dashboard for volume backlog SLA and CSAT,High
+Staffing,Reactive staffing model,Forecast-based staffing plan by region,Medium
+

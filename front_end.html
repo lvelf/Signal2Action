@@ -726,7 +726,7 @@
 
   .req-input-toolbar {
     display: grid;
-    grid-template-columns: minmax(0, 1.5fr) auto auto;
+    grid-template-columns: minmax(0, 1.5fr) auto auto auto;
     gap: 12px;
     align-items: stretch;
   }
@@ -852,6 +852,10 @@
     text-transform: uppercase;
     color: var(--ink3);
     text-align: left;
+  }
+
+  .hidden-file-input {
+    display: none;
   }
 
   .req-inline-meta {
@@ -1934,11 +1938,11 @@
           </div>
           <div class="req-mode-copy">
             <div class="req-mode-title">Requirement intake</div>
-            <div class="req-mode-desc">Support direct text input, pasted Google Drive links, or VoiceRun transcription that flows straight into the requirement field below.</div>
+            <div class="req-mode-desc">Support direct text input, multiple requirement files, and recorded voice notes that flow into reqANA.</div>
           </div>
         </div>
 
-        <button class="req-tool-btn" id="drive-upload-btn" type="button" onclick="handleGoogleDriveImport()">
+        <button class="req-tool-btn" id="drive-upload-btn" type="button" onclick="openRequirementFilePicker()">
           <div class="req-tool-btn-top">
             <div class="req-tool-icon drive">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -1948,12 +1952,29 @@
               </svg>
             </div>
             <div class="req-tool-label">
-              <strong>Google Drive</strong>
-              <span>Import share link</span>
+              <strong>Files</strong>
+              <span>Upload req docs</span>
             </div>
           </div>
-          <div class="req-tool-status" id="drive-upload-status">Paste drive link</div>
+          <div class="req-tool-status" id="drive-upload-status">Choose files</div>
         </button>
+        <input class="hidden-file-input" id="requirement-files" type="file" multiple accept=".txt,.md,.csv,.json,.yaml,.yml,.tsv,.xlsx,.xlsm" onchange="handleRequirementFilesChange()">
+
+        <button class="req-tool-btn" id="audio-upload-btn" type="button" onclick="openAudioFilePicker()">
+          <div class="req-tool-btn-top">
+            <div class="req-tool-icon voice">
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.75 7.75v8.5M8.25 5.75v12.5M11.75 9.25v5.5M15.25 4.75v14.5M18.75 8.25v7.5"/>
+              </svg>
+            </div>
+            <div class="req-tool-label">
+              <strong>Audio files</strong>
+              <span>Upload voice notes</span>
+            </div>
+          </div>
+          <div class="req-tool-status" id="audio-upload-status">Choose audio</div>
+        </button>
+        <input class="hidden-file-input" id="requirement-audio-files" type="file" multiple accept=".mp3,.mp4,.mpeg,.mpga,.m4a,.wav,.webm,audio/*" onchange="handleAudioFilesChange()">
 
         <button class="req-tool-btn" id="voice-run-btn" type="button" onclick="toggleVoiceCapture()">
           <div class="req-tool-btn-top">
@@ -1964,8 +1985,8 @@
               </svg>
             </div>
             <div class="req-tool-label">
-              <strong>VoiceRun</strong>
-              <span>Speech to text</span>
+              <strong>Voice</strong>
+              <span>Record audio</span>
             </div>
           </div>
           <div class="req-tool-status" id="voice-run-status">Tap to record</div>
@@ -1974,7 +1995,8 @@
 
       <div class="req-inline-meta" id="req-inline-meta">
         <div class="meta-pill" id="input-mode-pill"><strong>INPUT</strong><span>Text only</span></div>
-        <div class="meta-pill" id="drive-file-pill"><strong>DRIVE</strong><span>No file linked</span></div>
+        <div class="meta-pill" id="drive-file-pill"><strong>FILES</strong><span>No files selected</span></div>
+        <div class="meta-pill" id="audio-file-pill"><strong>AUDIO</strong><span>No audio selected</span></div>
         <div class="meta-pill" id="voice-pill"><strong>VOICE</strong><span>Idle</span></div>
       </div>
 
@@ -2228,7 +2250,10 @@ let state = {
   currentSlide: 0,
   attachments: {
     googleDrive: null,
+    files: [],
     voiceTranscript: '',
+    audioFiles: [],
+    audioBlobs: [],
   },
   voice: {
     recorder: null,
@@ -2273,8 +2298,9 @@ function updateInputModePill() {
   const problem = document.getElementById('problem-input').value.trim();
   const sources = [];
   if (problem) sources.push('Text');
-  if (state.attachments.googleDrive) sources.push('Drive');
-  if (state.attachments.voiceTranscript) sources.push('Voice');
+  if (state.attachments.files?.length) sources.push('Files');
+  if (state.attachments.audioFiles?.length) sources.push('Audio files');
+  if (state.attachments.audioBlobs?.length || state.attachments.voiceTranscript) sources.push('Recorded voice');
   document.querySelector('#input-mode-pill span').textContent = sources.length ? sources.join(' + ') : 'Text only';
 }
 
@@ -2291,6 +2317,44 @@ function updateDriveUi(label, statusText) {
   document.querySelector('#drive-file-pill span').textContent = label;
   document.getElementById('drive-upload-status').textContent = statusText;
   updateInputModePill();
+}
+
+function openRequirementFilePicker() {
+  document.getElementById('requirement-files').click();
+}
+
+function handleRequirementFilesChange() {
+  const input = document.getElementById('requirement-files');
+  state.attachments.files = Array.from(input.files || []);
+  const count = state.attachments.files.length;
+  if (!count) {
+    updateDriveUi('No files selected', 'Choose files');
+    return;
+  }
+  const label = count === 1 ? state.attachments.files[0].name : `${count} files selected`;
+  updateDriveUi(label, 'Files ready');
+}
+
+function updateAudioFileUi(label, statusText) {
+  document.querySelector('#audio-file-pill span').textContent = label;
+  document.getElementById('audio-upload-status').textContent = statusText;
+  updateInputModePill();
+}
+
+function openAudioFilePicker() {
+  document.getElementById('requirement-audio-files').click();
+}
+
+function handleAudioFilesChange() {
+  const input = document.getElementById('requirement-audio-files');
+  state.attachments.audioFiles = Array.from(input.files || []);
+  const count = state.attachments.audioFiles.length;
+  if (!count) {
+    updateAudioFileUi('No audio selected', 'Choose audio');
+    return;
+  }
+  const label = count === 1 ? state.attachments.audioFiles[0].name : `${count} audio files`;
+  updateAudioFileUi(label, 'Audio ready');
 }
 
 function updateVoiceUi(statusText, pillText, isRecording = false) {
@@ -2336,10 +2400,10 @@ async function toggleVoiceCapture() {
 
 async function startVoiceRecording() {
   if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
-    const fallback = window.prompt('VoiceRun fallback: paste the transcript text here.');
+    const fallback = window.prompt('Voice fallback: paste the transcript text here.');
     if (!fallback) return;
     state.attachments.voiceTranscript = fallback.trim();
-    appendToProblemInput(fallback.trim(), '[VoiceRun transcript]');
+    appendToProblemInput(fallback.trim(), '[Voice transcript]');
     updateVoiceUi('Transcript captured', 'Transcript ready');
     return;
   }
@@ -2365,13 +2429,13 @@ async function startVoiceRecording() {
     updateVoiceUi('Recording… tap to stop', 'Listening', true);
   } catch (error) {
     console.error(error);
-    const fallback = window.prompt('Microphone access failed. Paste the VoiceRun transcript instead.');
+    const fallback = window.prompt('Microphone access failed. Paste the voice transcript instead.');
     if (!fallback) {
       updateVoiceUi('Mic unavailable', 'Idle');
       return;
     }
     state.attachments.voiceTranscript = fallback.trim();
-    appendToProblemInput(fallback.trim(), '[VoiceRun transcript]');
+    appendToProblemInput(fallback.trim(), '[Voice transcript]');
     updateVoiceUi('Transcript captured', 'Transcript ready');
   }
 }
@@ -2379,21 +2443,20 @@ async function startVoiceRecording() {
 function stopVoiceRecording() {
   if (!state.voice.recorder) return;
   state.voice.isRecording = false;
-  updateVoiceUi('Transcribing with VoiceRun…', 'Processing');
+  updateVoiceUi('Saving audio…', 'Processing');
   state.voice.recorder.stop();
   state.voice.stream?.getTracks().forEach(track => track.stop());
 }
 
 async function finalizeVoiceTranscript(audioBlob) {
   try {
-    const transcript = await transcribeWithVoiceRun(audioBlob);
-    state.attachments.voiceTranscript = transcript;
-    appendToProblemInput(transcript, '[VoiceRun transcript]');
-    updateVoiceUi('Transcript captured', 'Transcript ready');
+    state.attachments.audioBlobs.push(audioBlob);
+    const count = state.attachments.audioBlobs.length;
+    updateVoiceUi('Audio captured', `${count} recording${count === 1 ? '' : 's'} ready`);
   } catch (error) {
     console.error(error);
-    updateVoiceUi('VoiceRun unavailable', 'Needs retry');
-    window.alert('VoiceRun transcription failed. You can paste the transcript manually for now.');
+    updateVoiceUi('Audio unavailable', 'Needs retry');
+    window.alert('Audio capture failed. You can paste the transcript manually for now.');
   } finally {
     state.voice.recorder = null;
     state.voice.stream = null;
@@ -2524,12 +2587,15 @@ function animateLoadingSteps(prefix, total, delayMs) {
 }
 
 /* ─── STEP 1: ANALYSIS ───────────────────────────── */
+const REQANA_API_BASE = window.REQANA_API_BASE || 'http://127.0.0.1:8001';
+
 async function runAnalysis() {
   const problem = document.getElementById('problem-input').value.trim();
-  if (!problem || problem.length < 20) {
-    document.getElementById('problem-input').focus();
-    document.getElementById('problem-input').style.outline = '2px solid var(--amber)';
-    setTimeout(() => document.getElementById('problem-input').style.outline = '', 1500);
+  const files = state.attachments.files || [];
+  const audioFiles = state.attachments.audioFiles || [];
+  const audioBlobs = state.attachments.audioBlobs || [];
+  if ((!problem || problem.length < 20) && !files.length && !audioFiles.length && !audioBlobs.length) {
+    window.alert('Add text, choose at least one file, or record at least one voice note.');
     return;
   }
 
@@ -2546,16 +2612,11 @@ async function runAnalysis() {
   animateLoadingSteps('ls-', 3, 900);
 
   try {
-    let analysis;
-    if (isLiveMode()) {
-      const systemPrompt = `You are an expert consulting analyst. Analyze the business problem and return ONLY valid JSON (no markdown, no explanation) with this exact schema:
-{"clarified_problem":"string","assumptions":["string"],"scope":"string","urgency":"high|medium|low","clarifying_questions":["string","string","string"]}`;
-      const userMsg = `Problem: ${problem}\nIndustry: ${state.context.industry || 'Not specified'}\nCompany size: ${state.context.companySize || 'Not specified'}\nTime horizon: ${state.context.timeHorizon || 'Not specified'}`;
-      analysis = await callClaude(systemPrompt, userMsg);
-    } else {
-      await new Promise(r => setTimeout(r, 2800));
-      analysis = getMockAnalysis(problem);
-    }
+    const result = await callReqANAFromMixed();
+    state.requirementDocument = result.document;
+    state.requirementMarkdown = result.markdown;
+    state.requirementSavedPath = result.saved_path;
+    const analysis = mapReqANAToAnalysis(result.document);
     state.analysis = analysis;
     renderAnalysisResults(analysis);
   } catch (err) {
@@ -2563,6 +2624,57 @@ async function runAnalysis() {
     state.analysis = getMockAnalysis(problem);
     renderAnalysisResults(state.analysis);
   }
+}
+
+async function callReqANAFromMixed() {
+  const formData = new FormData();
+  const problem = document.getElementById('problem-input').value.trim();
+  const contextLines = [
+    problem,
+    state.context.industry ? `Industry: ${state.context.industry}` : '',
+    state.context.companySize ? `Company size: ${state.context.companySize}` : '',
+    state.context.timeHorizon ? `Time horizon: ${state.context.timeHorizon}` : '',
+    state.attachments.googleDrive ? `Google Drive reference: ${state.attachments.googleDrive.url}` : '',
+    state.attachments.voiceTranscript ? `[Voice transcript]\n${state.attachments.voiceTranscript}` : '',
+  ].filter(Boolean);
+  if (contextLines.length) formData.append('text', contextLines.join('\n'));
+
+  for (const file of state.attachments.files || []) {
+    formData.append('files', file);
+  }
+
+  for (const file of state.attachments.audioFiles || []) {
+    formData.append('audio_files', file);
+  }
+
+  (state.attachments.audioBlobs || []).forEach((blob, index) => {
+    formData.append('audio_files', blob, `requirement-audio-${index + 1}.webm`);
+  });
+
+  const response = await fetch(`${REQANA_API_BASE}/requirements/from-mixed`, {
+    method: 'POST',
+    body: formData,
+  });
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({}));
+    throw new Error(payload.detail || `reqANA failed with ${response.status}`);
+  }
+  return response.json();
+}
+
+function mapReqANAToAnalysis(doc) {
+  return {
+    clarified_problem: doc.executive_summary || doc.title,
+    assumptions: [
+      ...(doc.objectives || []),
+      ...(doc.assumptions || []),
+      ...(doc.constraints || []),
+      ...(doc.risks || []),
+    ].slice(0, 8),
+    scope: doc.background || (doc.functional_requirements || []).join(' '),
+    urgency: 'medium',
+    clarifying_questions: doc.open_questions || [],
+  };
 }
 
 function renderAnalysisResults(a) {
@@ -2853,7 +2965,10 @@ function resetAll() {
     currentSlide:0,
     attachments: {
       googleDrive: null,
+      files: [],
       voiceTranscript: '',
+      audioFiles: [],
+      audioBlobs: [],
     },
     voice: {
       recorder: null,
@@ -2863,11 +2978,14 @@ function resetAll() {
     },
   };
   document.getElementById('problem-input').value = '';
+  document.getElementById('requirement-files').value = '';
+  document.getElementById('requirement-audio-files').value = '';
   document.getElementById('req-form').classList.remove('hidden');
   document.getElementById('req-loading').classList.add('hidden');
   document.getElementById('req-results').classList.add('hidden');
   document.getElementById('analyze-btn').disabled = false;
-  updateDriveUi('No file linked', 'Paste drive link');
+  updateDriveUi('No files selected', 'Choose files');
+  updateAudioFileUi('No audio selected', 'Choose audio');
   updateVoiceUi('Tap to record', 'Idle');
   goToStep(1);
 }
@@ -2885,7 +3003,8 @@ document.addEventListener('keydown', e => {
   }
 });
 
-updateDriveUi('No file linked', 'Paste drive link');
+updateDriveUi('No files selected', 'Choose files');
+updateAudioFileUi('No audio selected', 'Choose audio');
 updateVoiceUi('Tap to record', 'Idle');
 </script>
 </body>

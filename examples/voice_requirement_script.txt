@@ -1,0 +1,6 @@
+The client wants a ninety day CRM rollout roadmap.
+Sales leads are currently tracked in spreadsheets.
+Sales managers need pipeline visibility by region.
+Marketing handoff is inconsistent.
+The solution must integrate with finance reporting.
+Leadership needs a cost estimate and implementation risks.

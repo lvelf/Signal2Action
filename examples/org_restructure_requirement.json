@@ -1,0 +1,23 @@
+{
+  "client": "Post-merger technology company",
+  "objective": "Create a 6-week operating model recommendation for two overlapping engineering organizations.",
+  "context": [
+    "Two engineering teams total 400 people.",
+    "There are duplicated roles across platform, infrastructure, and application teams.",
+    "The two teams use different technology stacks and release processes.",
+    "Employee morale is low after the merger announcement."
+  ],
+  "requirements": [
+    "Map duplicated roles and critical capabilities.",
+    "Identify target operating model options.",
+    "Recommend decision criteria for consolidation.",
+    "Create a stakeholder communication plan.",
+    "Define a transition roadmap with risks and dependencies."
+  ],
+  "constraints": [
+    "Recommendation due in 6 weeks.",
+    "No layoffs can be announced before legal review.",
+    "Critical product releases cannot slip this quarter."
+  ]
+}
+

@@ -4,6 +4,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from reqANA.agent import RequirementAgent, render_markdown, save_markdown
@@ -14,6 +15,13 @@ from reqANA.transcription import AudioTranscriber
 load_dotenv(override=True)
 
 app = FastAPI(title="Signal2Action Requirement Intake API")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 class TextRequirementRequest(BaseModel):
@@ -123,17 +131,31 @@ async def requirements_from_voice(
 async def requirements_from_mixed(
     files: list[UploadFile] | None = File(default=None),
     audio: UploadFile | None = File(default=None),
+    audio_files: list[UploadFile] | None = File(default=None),
     text: str | None = Form(default=None),
 ) -> RequirementResponse:
+    """Generate requirements from browser FormData.
+
+    Expected frontend fields:
+    - text: optional plain text
+    - files: zero or more requirement files; append this key once per file
+    - audio: optional single recorded audio blob/file
+    - audio_files: optional repeated recorded audio blobs/files
+    """
     inputs: list[RequirementInput] = []
     if text:
         inputs.append(RequirementInput(source=IntakeSource.TEXT, content=text))
 
     inputs.extend(await _read_uploads(files or []))
 
+    audio_uploads = []
     if _has_upload(audio):
+        audio_uploads.append(audio)
+    audio_uploads.extend([item for item in audio_files or [] if _has_upload(item)])
+
+    for audio_upload in audio_uploads:
         try:
-            transcript = await AudioTranscriber().transcribe_upload(audio)
+            transcript = await AudioTranscriber().transcribe_upload(audio_upload)
         except RuntimeError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
         except Exception as exc:
@@ -142,7 +164,7 @@ async def requirements_from_mixed(
             RequirementInput(
                 source=IntakeSource.VOICE,
                 content=transcript,
-                filename=audio.filename,
+                filename=audio_upload.filename,
                 metadata={"transcript_source": "audio_upload"},
             )
         )
