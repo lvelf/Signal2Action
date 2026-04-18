@@ -79,20 +79,19 @@ def veris_requirement_agent(payload: VerisRequest) -> VerisResponse:
 
 
 @app.post("/requirements/from-file", response_model=RequirementResponse)
-async def requirements_from_file(file: UploadFile = File(...)) -> RequirementResponse:
-    try:
-        content = await read_requirement_file(file)
-    except UnicodeDecodeError as exc:
-        raise HTTPException(status_code=400, detail="File must be UTF-8 text.") from exc
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+async def requirements_from_file(files: list[UploadFile] = File(...)) -> RequirementResponse:
+    inputs = await _read_uploads(files)
+    if not inputs:
+        raise HTTPException(status_code=400, detail="Provide at least one requirement file.")
+    return _generate_response(inputs)
 
-    requirement_input = RequirementInput(
-        source=IntakeSource.FILE,
-        content=content,
-        filename=file.filename,
-    )
-    return _generate_response([requirement_input])
+
+@app.post("/requirements/from-files", response_model=RequirementResponse)
+async def requirements_from_files(files: list[UploadFile] = File(...)) -> RequirementResponse:
+    inputs = await _read_uploads(files)
+    if not inputs:
+        raise HTTPException(status_code=400, detail="Provide at least one requirement file.")
+    return _generate_response(inputs)
 
 
 @app.post("/requirements/from-voice", response_model=RequirementResponse)
@@ -100,7 +99,12 @@ async def requirements_from_voice(
     audio: UploadFile = File(...),
     context: str | None = Form(default=None),
 ) -> RequirementResponse:
-    transcript = await AudioTranscriber().transcribe_upload(audio)
+    try:
+        transcript = await AudioTranscriber().transcribe_upload(audio)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Audio transcription failed: {exc}") from exc
     inputs = []
     if context:
         inputs.append(RequirementInput(source=IntakeSource.TEXT, content=context))
@@ -125,15 +129,15 @@ async def requirements_from_mixed(
     if text:
         inputs.append(RequirementInput(source=IntakeSource.TEXT, content=text))
 
-    for file in files or []:
-        try:
-            content = await read_requirement_file(file)
-        except (UnicodeDecodeError, ValueError) as exc:
-            raise HTTPException(status_code=400, detail=f"{file.filename}: {exc}") from exc
-        inputs.append(RequirementInput(source=IntakeSource.FILE, content=content, filename=file.filename))
+    inputs.extend(await _read_uploads(files or []))
 
-    if audio:
-        transcript = await AudioTranscriber().transcribe_upload(audio)
+    if _has_upload(audio):
+        try:
+            transcript = await AudioTranscriber().transcribe_upload(audio)
+        except RuntimeError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+        except Exception as exc:
+            raise HTTPException(status_code=502, detail=f"Audio transcription failed: {exc}") from exc
         inputs.append(
             RequirementInput(
                 source=IntakeSource.VOICE,
@@ -155,7 +159,7 @@ def _generate_response(inputs: list[RequirementInput]) -> RequirementResponse:
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"Requirement agent failed: {exc}") from exc
 
-    saved_path = save_markdown(document, Path("outputs"))
+    saved_path = save_markdown(document, Path("Req_outputs"))
     return RequirementResponse(
         document=document,
         markdown=render_markdown(document),
@@ -169,3 +173,22 @@ def _mask_secret(value: str) -> str | None:
     if len(value) <= 8:
         return "<present but too short to mask safely>"
     return f"{value[:4]}...{value[-4:]}"
+
+
+def _has_upload(file: UploadFile | None) -> bool:
+    return bool(file and file.filename)
+
+
+async def _read_uploads(files: list[UploadFile]) -> list[RequirementInput]:
+    inputs: list[RequirementInput] = []
+    for file in files:
+        if not _has_upload(file):
+            continue
+        try:
+            content = await read_requirement_file(file)
+        except UnicodeDecodeError as exc:
+            raise HTTPException(status_code=400, detail=f"{file.filename}: file must be UTF-8 text.") from exc
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=f"{file.filename}: {exc}") from exc
+        inputs.append(RequirementInput(source=IntakeSource.FILE, content=content, filename=file.filename))
+    return inputs

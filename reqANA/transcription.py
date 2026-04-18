@@ -8,6 +8,13 @@ from fastapi import UploadFile
 
 class AudioTranscriber:
     def __init__(self, model: str | None = None) -> None:
+        if not os.getenv("OPENAI_API_KEY"):
+            raise RuntimeError(
+                "OPENAI_API_KEY is required for /requirements/from-voice because local "
+                "audio upload transcription currently uses OpenAI. VoiceRun microphone "
+                "sessions do not use this endpoint."
+            )
+
         try:
             from openai import OpenAI
         except ImportError as exc:

@@ -66,6 +66,10 @@ http://127.0.0.1:8000/docs
 - `GET /health`
 - `POST /requirements/from-text`
 - `POST /requirements/from-file`
+- `POST /requirements/from-files`
 - `POST /requirements/from-voice`
 - `POST /requirements/from-mixed`
 - `POST /veris/requirement-agent`
+
+Requirement file upload supports `.txt`, `.md`, `.csv`, `.json`, `.yaml`, `.yml`,
+`.tsv`, `.xlsx`, and `.xlsm`.

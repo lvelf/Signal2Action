@@ -27,7 +27,7 @@ Signal2Action/
 ## 这几个 API 分别做什么
 
 - `POST /requirements/from-text`: 输入文字需求，生成需求文档
-- `POST /requirements/from-file`: 上传 `.txt/.md/.csv/.json/.yaml/.yml` 文件
+- `POST /requirements/from-file`: 上传一个或多个 `.txt/.md/.csv/.json/.yaml/.yml/.tsv/.xlsx/.xlsm` 文件
 - `POST /requirements/from-voice`: 上传音频文件，先转写，再生成需求文档
 - `POST /requirements/from-mixed`: 同时输入文字、文件、音频
 - `POST /veris/requirement-agent`: 给 Veris simulation 用的简单入口
@@ -92,7 +92,15 @@ curl -X POST http://127.0.0.1:8000/requirements/from-text \
 
 ```bash
 curl -X POST http://127.0.0.1:8000/requirements/from-file \
-  -F "file=@examples/sample_requirement.txt"
+  -F "files=@examples/sample_requirement.txt"
+```
+
+### 多文件输入
+
+```bash
+curl -X POST http://127.0.0.1:8000/requirements/from-file \
+  -F "files=@examples/sample_requirement.txt" \
+  -F "files=@requirements.xlsx"
 ```
 
 ### 音频文件输入
