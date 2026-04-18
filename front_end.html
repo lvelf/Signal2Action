@@ -1,0 +1,1912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signal2Action — Turn Ambiguity Into Action</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --cream: #FAF8F4;
+    --warm: #F0EDE6;
+    --stone: #E2DDD6;
+    --ink: #1A1714;
+    --ink2: #4A4540;
+    --ink3: #8A857E;
+    --blue: #2563EB;
+    --blue-light: #EFF4FF;
+    --purple: #7C3AED;
+    --purple-light: #F5F0FF;
+    --teal: #0D9488;
+    --teal-light: #F0FDFB;
+    --amber: #D97706;
+    --amber-light: #FFFBEB;
+    --border: rgba(26,23,20,0.1);
+    --green: #16A34A;
+    --green-light: #F0FDF4;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    overflow-x: hidden;
+  }
+
+  /* ─── HERO ─────────────────────────────────────── */
+  #hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    background: var(--ink);
+  }
+
+  #hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    opacity: 0.4;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .hero-glow {
+    position: absolute;
+    width: 700px; height: 700px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(37,99,235,0.12) 0%, transparent 70%);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -55%);
+    pointer-events: none;
+    z-index: 0;
+    animation: pulse-glow 6s ease-in-out infinite;
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { opacity: 0.6; transform: translate(-50%, -55%) scale(1); }
+    50% { opacity: 1; transform: translate(-50%, -55%) scale(1.08); }
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    padding: 0 48px;
+    max-width: 1100px;
+  }
+
+  .hero-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(64px, 11vw, 120px);
+    line-height: 1.05;
+    letter-spacing: -3px;
+    color: #fff;
+    margin-bottom: 0;
+  }
+
+  .hero-title .line {
+    display: block;
+    overflow: hidden;
+  }
+
+  .hero-title .line-inner {
+    display: block;
+    opacity: 0;
+    transform: translateY(100%);
+  }
+
+  .hero-title .line:nth-child(1) .line-inner {
+    animation: slide-up 0.9s cubic-bezier(0.16,1,0.3,1) forwards;
+    animation-delay: 0.7s;
+  }
+  .hero-title .line:nth-child(2) .line-inner {
+    animation: slide-up 0.9s cubic-bezier(0.16,1,0.3,1) forwards;
+    animation-delay: 0.95s;
+  }
+
+  .hero-tagline {
+    font-size: clamp(28px, 4.5vw, 52px);
+    letter-spacing: 0px;
+    color: rgba(255,255,255,0.45);
+    font-style: italic;
+  }
+
+  .hero-cta-hint {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    opacity: 0;
+    animation: line-in 1s ease forwards;
+    animation-delay: 2s;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .hero-cta-hint span {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: rgba(255,255,255,0.25);
+    text-transform: uppercase;
+  }
+  .hero-cta-hint svg { opacity: 0.2; animation: bounce-down 2s ease-in-out infinite 2.5s; }
+  @keyframes bounce-down {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(6px); }
+  }
+
+  @keyframes slide-up {
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes line-in {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ─── NAV ───────────────────────────────────────── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 40px;
+    transition: background 0.4s, border-color 0.4s;
+  }
+  nav.scrolled {
+    background: rgba(250,248,244,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 0.5px solid var(--border);
+  }
+  .logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    color: #fff;
+    letter-spacing: -0.3px;
+    transition: color 0.4s;
+    cursor: pointer;
+  }
+  nav.scrolled .logo { color: var(--ink); }
+  .logo em { font-style: italic; color: rgba(255,255,255,0.4); }
+  nav.scrolled .logo em { color: var(--blue); }
+
+  .nav-steps { display: flex; gap: 4px; }
+  .nav-step-btn {
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: none;
+    background: transparent;
+    color: rgba(255,255,255,0.35);
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .nav-step-btn:hover { color: rgba(255,255,255,0.7); }
+  nav.scrolled .nav-step-btn { color: var(--ink3); }
+  nav.scrolled .nav-step-btn:hover { color: var(--ink); }
+  .nav-step-btn.active {
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+  }
+  nav.scrolled .nav-step-btn.active {
+    background: var(--blue-light);
+    color: var(--blue);
+    font-weight: 500;
+  }
+
+  .nav-cta {
+    font-size: 13px;
+    padding: 8px 20px;
+    border-radius: 40px;
+    background: rgba(255,255,255,0.1);
+    border: 0.5px solid rgba(255,255,255,0.2);
+    color: #fff;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.3s;
+  }
+  .nav-cta:hover { background: rgba(255,255,255,0.18); }
+  nav.scrolled .nav-cta { background: var(--blue); border-color: var(--blue); color: #fff; }
+  nav.scrolled .nav-cta:hover { opacity: 0.9; }
+
+  /* ─── APP WRAPPER ───────────────────────────────── */
+  #app { min-height: 100vh; }
+
+  /* ─── API BAR ───────────────────────────────────── */
+  #api-bar {
+    background: var(--ink);
+    padding: 12px 40px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 0.5px solid rgba(255,255,255,0.07);
+  }
+  #api-bar label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: rgba(255,255,255,0.3);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  #api-key-input {
+    flex: 1;
+    max-width: 380px;
+    background: rgba(255,255,255,0.05);
+    border: 0.5px solid rgba(255,255,255,0.12);
+    border-radius: 6px;
+    padding: 7px 12px;
+    color: rgba(255,255,255,0.7);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  #api-key-input:focus { border-color: rgba(37,99,235,0.6); }
+  #api-key-input::placeholder { color: rgba(255,255,255,0.2); }
+  .api-status {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 0.5px solid;
+  }
+  .api-status.demo { color: var(--amber); border-color: rgba(217,119,6,0.3); background: var(--amber-light); }
+  .api-status.live { color: var(--green); border-color: rgba(22,163,74,0.3); background: var(--green-light); }
+  .api-bar-hint {
+    font-size: 11px;
+    color: rgba(255,255,255,0.2);
+    margin-left: 8px;
+  }
+
+  /* ─── STEP INDICATOR ───────────────────────────── */
+  .step-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 40px 0;
+    gap: 0;
+  }
+  .step-dot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+  .step-dot-circle {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 1.5px solid var(--stone);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--ink3);
+    background: #fff;
+    transition: all 0.3s;
+  }
+  .step-dot.active .step-dot-circle {
+    background: var(--blue);
+    border-color: var(--blue);
+    color: #fff;
+  }
+  .step-dot.done .step-dot-circle {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #fff;
+  }
+  .step-dot-label {
+    font-size: 11px;
+    color: var(--ink3);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: color 0.3s;
+  }
+  .step-dot.active .step-dot-label { color: var(--blue); font-weight: 500; }
+  .step-dot.done .step-dot-label { color: var(--ink2); }
+  .step-line {
+    width: 80px;
+    height: 1px;
+    background: var(--stone);
+    margin: 0 8px;
+    margin-bottom: 22px;
+    flex-shrink: 0;
+    transition: background 0.3s;
+  }
+  .step-line.done { background: var(--ink); }
+
+  /* ─── STEP SECTIONS ─────────────────────────────── */
+  .step-section {
+    padding: 48px 40px 80px;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+  .step-section.hidden { display: none; }
+
+  .step-header {
+    margin-bottom: 36px;
+  }
+  .step-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 10px;
+  }
+  .step-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(28px, 4vw, 42px);
+    letter-spacing: -1px;
+    line-height: 1.15;
+    color: var(--ink);
+  }
+  .step-sub {
+    font-size: 15px;
+    color: var(--ink3);
+    margin-top: 8px;
+    font-weight: 300;
+    line-height: 1.7;
+  }
+
+  /* ─── STEP 1: REQUIREMENTS ───────────────────────── */
+  .req-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .req-main-input {
+    background: #fff;
+    border: 1px solid var(--stone);
+    border-radius: 14px;
+    padding: 24px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .req-main-input:focus-within {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.08);
+  }
+  .req-main-input label {
+    display: block;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--ink3);
+    margin-bottom: 12px;
+  }
+  #problem-input {
+    width: 100%;
+    min-height: 160px;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    color: var(--ink);
+    line-height: 1.7;
+    resize: vertical;
+    font-weight: 300;
+  }
+  #problem-input::placeholder { color: var(--ink3); opacity: 0.6; }
+
+  .req-context-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+  }
+
+  .req-field {
+    background: #fff;
+    border: 0.5px solid var(--stone);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .req-field label {
+    display: block;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--ink3);
+    margin-bottom: 6px;
+  }
+  .req-field input, .req-field select {
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--ink);
+    font-weight: 400;
+  }
+  .req-field select { cursor: pointer; }
+
+  .req-submit-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .req-examples {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .example-chip {
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    background: var(--warm);
+    border: 0.5px solid var(--stone);
+    color: var(--ink2);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .example-chip:hover { background: var(--blue-light); border-color: var(--blue); color: var(--blue); }
+
+  .btn-primary {
+    padding: 12px 32px;
+    border-radius: 40px;
+    background: var(--ink);
+    color: #fff;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-primary:hover { background: var(--blue); transform: translateY(-1px); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .btn-secondary {
+    padding: 11px 24px;
+    border-radius: 40px;
+    background: transparent;
+    color: var(--ink2);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    border: 0.5px solid var(--stone);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--ink3); color: var(--ink); }
+
+  /* ─── LOADING ───────────────────────────────────── */
+  .loading-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 60px;
+    background: #fff;
+    border-radius: 16px;
+    border: 0.5px solid var(--border);
+  }
+  .loading-block.hidden { display: none; }
+  .spinner {
+    width: 28px; height: 28px;
+    border: 2px solid var(--stone);
+    border-top-color: var(--blue);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--ink3);
+    text-transform: uppercase;
+  }
+  .loading-steps { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+  .loading-step {
+    font-size: 13px;
+    color: var(--ink3);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 300;
+  }
+  .loading-step.done { color: var(--green); }
+  .loading-step.active { color: var(--blue); }
+  .loading-step svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+  /* ─── RESULT CARDS ──────────────────────────────── */
+  .result-block { display: flex; flex-direction: column; gap: 16px; }
+  .result-block.hidden { display: none; }
+
+  .result-card {
+    background: #fff;
+    border: 0.5px solid var(--border);
+    border-radius: 14px;
+    padding: 24px 28px;
+  }
+  .result-card-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--ink3);
+    margin-bottom: 12px;
+  }
+  .result-card-content {
+    font-size: 15px;
+    color: var(--ink);
+    line-height: 1.75;
+    font-weight: 400;
+  }
+  .result-card.accent-blue { border-left: 3px solid var(--blue); }
+  .result-card.accent-purple { border-left: 3px solid var(--purple); }
+  .result-card.accent-amber { border-left: 3px solid var(--amber); }
+
+  .tag-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .tag {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: var(--warm);
+    border: 0.5px solid var(--stone);
+    color: var(--ink2);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.3px;
+  }
+  .tag.blue { background: var(--blue-light); border-color: rgba(37,99,235,0.2); color: var(--blue); }
+  .tag.amber { background: var(--amber-light); border-color: rgba(217,119,6,0.2); color: var(--amber); }
+  .tag.purple { background: var(--purple-light); border-color: rgba(124,58,237,0.2); color: var(--purple); }
+
+  .questions-list { display: flex; flex-direction: column; gap: 8px; }
+  .question-item {
+    display: flex;
+    gap: 10px;
+    font-size: 14px;
+    color: var(--ink2);
+    line-height: 1.6;
+    font-weight: 300;
+    padding: 10px 0;
+    border-bottom: 0.5px solid var(--stone);
+  }
+  .question-item:last-child { border-bottom: none; }
+  .q-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--ink3);
+    margin-top: 3px;
+    flex-shrink: 0;
+  }
+
+  .step-action-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 24px;
+    justify-content: flex-end;
+  }
+
+  /* ─── STEP 2: FUNCTION DECOMPOSITION ────────────── */
+  .module-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .module-card {
+    background: #fff;
+    border: 0.5px solid var(--border);
+    border-radius: 14px;
+    padding: 22px 24px;
+    position: relative;
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+  }
+  .module-card:hover { box-shadow: 0 4px 20px rgba(26,23,20,0.08); }
+  .module-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+  }
+  .module-card.p-high::before { background: var(--blue); }
+  .module-card.p-medium::before { background: var(--amber); }
+  .module-card.p-low::before { background: var(--teal); }
+
+  .module-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    gap: 12px;
+  }
+  .module-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--ink3);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .module-badges { display: flex; gap: 4px; flex-shrink: 0; }
+  .badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    padding: 3px 7px;
+    border-radius: 10px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .badge.priority-high { background: var(--blue-light); color: var(--blue); }
+  .badge.priority-medium { background: var(--amber-light); color: var(--amber); }
+  .badge.priority-low { background: var(--teal-light); color: var(--teal); }
+  .badge.complexity-high { background: #FEF2F2; color: #DC2626; }
+  .badge.complexity-medium { background: var(--warm); color: var(--ink3); }
+  .badge.complexity-low { background: var(--green-light); color: var(--green); }
+
+  .module-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    letter-spacing: -0.3px;
+    color: var(--ink);
+    font-weight: 400;
+    flex: 1;
+  }
+  .module-desc {
+    font-size: 13px;
+    color: var(--ink3);
+    line-height: 1.7;
+    font-weight: 300;
+    margin-bottom: 14px;
+  }
+  .module-io {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .module-io-box {
+    background: var(--warm);
+    border-radius: 8px;
+    padding: 8px 10px;
+  }
+  .module-io-box .io-l {
+    font-family: 'DM Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--ink3);
+    margin-bottom: 3px;
+  }
+  .module-io-box .io-v {
+    font-size: 11px;
+    color: var(--ink2);
+    font-weight: 400;
+    line-height: 1.4;
+  }
+
+  .module-approach {
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--ink2);
+    font-style: italic;
+    font-weight: 300;
+    line-height: 1.6;
+    padding-top: 10px;
+    border-top: 0.5px solid var(--stone);
+  }
+
+  .critical-path-bar {
+    background: var(--ink);
+    border-radius: 12px;
+    padding: 18px 22px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+  .critical-path-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+    white-space: nowrap;
+  }
+  .critical-path-items {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    flex-wrap: wrap;
+    flex: 1;
+  }
+  .cp-item {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.7);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 400;
+  }
+  .cp-arrow { color: rgba(255,255,255,0.2); font-size: 12px; }
+
+  /* ─── STEP 3: DELIVERABLES ──────────────────────── */
+  .deliverables-tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 0.5px solid var(--stone);
+    margin-bottom: 32px;
+  }
+  .del-tab {
+    padding: 10px 20px;
+    border: none;
+    background: transparent;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--ink3);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.2s;
+    font-weight: 400;
+  }
+  .del-tab:hover { color: var(--ink); }
+  .del-tab.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 500; }
+
+  .del-panel { display: none; }
+  .del-panel.active { display: block; }
+
+  /* PPT Slides */
+  .ppt-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .slide-nav {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .slide-btn {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: 0.5px solid var(--stone);
+    background: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink2);
+    transition: all 0.2s;
+  }
+  .slide-btn:hover { border-color: var(--blue); color: var(--blue); }
+  .slide-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .slide-counter {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--ink3);
+  }
+  .slide-dots {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .slide-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--stone);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .slide-dot.active { background: var(--blue); width: 18px; border-radius: 3px; }
+
+  .slide-viewport {
+    aspect-ratio: 16/9;
+    background: var(--ink);
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    padding: 10%;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .slide.active { display: flex; }
+  .slide.slide-title { background: var(--ink); }
+  .slide.slide-light { background: var(--cream); }
+  .slide.slide-accent { background: var(--blue); }
+  .slide.slide-dark { background: #111; }
+
+  .slide-tag-text {
+    font-family: 'DM Mono', monospace;
+    font-size: clamp(8px, 1vw, 11px);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+    margin-bottom: 16px;
+  }
+  .slide-h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(28px, 4.5vw, 52px);
+    letter-spacing: -1.5px;
+    line-height: 1.1;
+    color: #fff;
+    margin-bottom: 12px;
+  }
+  .slide-h1.dark { color: var(--ink); }
+  .slide-h1.blue { color: #fff; }
+  .slide-sub-text {
+    font-size: clamp(11px, 1.5vw, 15px);
+    color: rgba(255,255,255,0.45);
+    line-height: 1.6;
+    font-weight: 300;
+    max-width: 70%;
+  }
+  .slide-sub-text.dark { color: var(--ink3); }
+  .slide-bullets {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .slide-bullet {
+    display: flex;
+    gap: 10px;
+    font-size: clamp(10px, 1.3vw, 14px);
+    color: rgba(255,255,255,0.7);
+    line-height: 1.5;
+    font-weight: 300;
+  }
+  .slide-bullet.dark { color: var(--ink2); }
+  .slide-bullet::before {
+    content: '—';
+    color: rgba(255,255,255,0.25);
+    flex-shrink: 0;
+    font-family: 'DM Mono', monospace;
+  }
+  .slide-bullet.dark::before { color: var(--ink3); }
+  .slide-modules-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 16px;
+  }
+  .slide-module-box {
+    background: rgba(255,255,255,0.06);
+    border: 0.5px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+  .slide-module-name {
+    font-size: clamp(9px, 1.1vw, 12px);
+    color: rgba(255,255,255,0.8);
+    font-weight: 500;
+    margin-bottom: 3px;
+  }
+  .slide-module-desc {
+    font-size: clamp(8px, 0.9vw, 10px);
+    color: rgba(255,255,255,0.35);
+    line-height: 1.4;
+  }
+  .slide-footer {
+    position: absolute;
+    bottom: 4%;
+    left: 10%;
+    right: 10%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .slide-footer-brand {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(8px, 1vw, 11px);
+    color: rgba(255,255,255,0.15);
+    letter-spacing: -0.2px;
+  }
+  .slide-footer-brand.dark { color: rgba(26,23,20,0.2); }
+  .slide-page {
+    font-family: 'DM Mono', monospace;
+    font-size: clamp(7px, 0.8vw, 10px);
+    color: rgba(255,255,255,0.15);
+  }
+  .slide-page.dark { color: rgba(26,23,20,0.2); }
+  .slide-accent-bar {
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+    background: var(--blue);
+  }
+  .slide-timeline {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 16px;
+  }
+  .timeline-col {
+    background: rgba(255,255,255,0.05);
+    border-radius: 8px;
+    padding: 10px 12px;
+    border-top: 2px solid rgba(255,255,255,0.15);
+  }
+  .timeline-label {
+    font-family: 'DM Mono', monospace;
+    font-size: clamp(8px, 0.8vw, 10px);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+    margin-bottom: 8px;
+  }
+  .timeline-item {
+    font-size: clamp(9px, 1vw, 11px);
+    color: rgba(255,255,255,0.6);
+    line-height: 1.5;
+    padding: 3px 0;
+    border-bottom: 0.5px solid rgba(255,255,255,0.05);
+    font-weight: 300;
+  }
+  .timeline-item:last-child { border-bottom: none; }
+
+  /* Display Card */
+  .display-card-wrapper {
+    display: flex;
+    justify-content: center;
+    padding: 20px 0;
+  }
+  .display-card {
+    width: 100%;
+    max-width: 560px;
+    background: var(--ink);
+    border-radius: 20px;
+    overflow: hidden;
+    position: relative;
+  }
+  .dc-header {
+    padding: 28px 28px 20px;
+    border-bottom: 0.5px solid rgba(255,255,255,0.07);
+  }
+  .dc-brand {
+    font-family: 'DM Serif Display', serif;
+    font-size: 13px;
+    color: rgba(255,255,255,0.25);
+    letter-spacing: -0.2px;
+    margin-bottom: 14px;
+  }
+  .dc-headline {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    letter-spacing: -0.5px;
+    line-height: 1.25;
+    color: #fff;
+    margin-bottom: 8px;
+  }
+  .dc-scope {
+    font-size: 13px;
+    color: rgba(255,255,255,0.35);
+    font-weight: 300;
+    line-height: 1.6;
+  }
+  .dc-body {
+    padding: 20px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .dc-section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.2);
+    margin-bottom: 6px;
+  }
+  .dc-modules-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .dc-module-tag {
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.07);
+    color: rgba(255,255,255,0.55);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 400;
+  }
+  .dc-actions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .dc-action {
+    display: flex;
+    gap: 10px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.5;
+    font-weight: 300;
+  }
+  .dc-action-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: rgba(255,255,255,0.2);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .dc-footer {
+    padding: 14px 28px;
+    border-top: 0.5px solid rgba(255,255,255,0.07);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .dc-timeline-pill {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.07);
+    color: rgba(255,255,255,0.35);
+  }
+  .dc-event {
+    font-size: 11px;
+    color: rgba(255,255,255,0.15);
+    font-weight: 300;
+  }
+
+  .output-action-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 24px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+  .btn-icon {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* ─── PRINT STYLES ──────────────────────────────── */
+  @media print {
+    nav, #hero, #api-bar, .step-indicator, .step-action-row, .output-action-row,
+    .ppt-controls, .deliverables-tabs, #step-requirements, #step-functions,
+    .del-panel:not(#panel-ppt) { display: none !important; }
+    #panel-ppt { display: block !important; }
+    .slide-viewport { aspect-ratio: auto; height: auto; border-radius: 0; }
+    .slide { position: relative; inset: auto; display: flex !important; page-break-after: always; min-height: 50vh; }
+    body { background: #fff; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="logo" onclick="document.getElementById('hero').scrollIntoView({behavior:'smooth'})">Signal<em>2</em>Action</div>
+  <div class="nav-steps">
+    <button class="nav-step-btn active" onclick="scrollToStep(1)">01 Requirements</button>
+    <button class="nav-step-btn" onclick="scrollToStep(2)">02 Functions</button>
+    <button class="nav-step-btn" onclick="scrollToStep(3)">03 Deliverables</button>
+  </div>
+  <button class="nav-cta" onclick="scrollToStep(1)">Start analysis</button>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-content">
+    <h1 class="hero-title">
+      <span class="line"><span class="line-inner">Signal2Action</span></span>
+      <span class="line"><span class="line-inner hero-tagline">We make consulting better.</span></span>
+    </h1>
+  </div>
+  <div class="hero-cta-hint" onclick="scrollToStep(1)">
+    <span>Start your analysis</span>
+    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+    </svg>
+  </div>
+</section>
+
+<!-- APP -->
+<div id="app">
+
+  <!-- API KEY BAR -->
+  <div id="api-bar">
+    <label for="api-key-input">Claude API Key</label>
+    <input id="api-key-input" type="password" placeholder="sk-ant-..." autocomplete="off" oninput="updateApiStatus()">
+    <span id="api-status" class="api-status demo">DEMO MODE</span>
+    <span class="api-bar-hint">No key? Demo mode uses realistic mock data.</span>
+  </div>
+
+  <!-- STEP INDICATOR -->
+  <div class="step-indicator" id="step-indicator">
+    <div class="step-dot active" id="sdot-1" onclick="goToStep(1)">
+      <div class="step-dot-circle">01</div>
+      <span class="step-dot-label">Requirements</span>
+    </div>
+    <div class="step-line" id="sline-1"></div>
+    <div class="step-dot" id="sdot-2" onclick="goToStep(2)">
+      <div class="step-dot-circle">02</div>
+      <span class="step-dot-label">Functions</span>
+    </div>
+    <div class="step-line" id="sline-2"></div>
+    <div class="step-dot" id="sdot-3" onclick="goToStep(3)">
+      <div class="step-dot-circle">03</div>
+      <span class="step-dot-label">Deliverables</span>
+    </div>
+  </div>
+
+  <!-- STEP 1: REQUIREMENT ANALYSIS -->
+  <section class="step-section" id="step-requirements">
+    <div class="step-header">
+      <div class="step-tag">Step 01 — Requirement Analysis</div>
+      <h2 class="step-title">Describe your business challenge</h2>
+      <p class="step-sub">Type freely — voice note transcript, email thread, or a rough idea. Signal2Action extracts the signal.</p>
+    </div>
+
+    <!-- Input form -->
+    <div class="req-form" id="req-form">
+      <div class="req-main-input">
+        <label for="problem-input">Problem description</label>
+        <textarea id="problem-input" placeholder="e.g. Our Q3 margins are down 15% and we don't know which product line is causing it. We have 3 product lines and a full finance team but analysis takes weeks..."></textarea>
+      </div>
+      <div class="req-context-row">
+        <div class="req-field">
+          <label>Industry</label>
+          <select id="industry">
+            <option value="">Select industry</option>
+            <option>Consumer Goods</option>
+            <option>Financial Services</option>
+            <option>Healthcare</option>
+            <option>Technology</option>
+            <option>Manufacturing</option>
+            <option>Retail</option>
+            <option>Professional Services</option>
+            <option>Energy</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="req-field">
+          <label>Company size</label>
+          <select id="company-size">
+            <option value="">Select size</option>
+            <option>Startup (&lt;50)</option>
+            <option>SMB (50–500)</option>
+            <option>Mid-market (500–5k)</option>
+            <option>Enterprise (5k+)</option>
+          </select>
+        </div>
+        <div class="req-field">
+          <label>Time horizon</label>
+          <select id="time-horizon">
+            <option value="">Select horizon</option>
+            <option>Immediate (days)</option>
+            <option>Short-term (weeks)</option>
+            <option>Medium-term (1–3 months)</option>
+            <option>Long-term (3–12 months)</option>
+          </select>
+        </div>
+      </div>
+      <div class="req-submit-row">
+        <div class="req-examples">
+          <span style="font-size:12px;color:var(--ink3);margin-right:4px;">Try:</span>
+          <button class="example-chip" onclick="fillExample(0)">Margin compression</button>
+          <button class="example-chip" onclick="fillExample(1)">Market entry</button>
+          <button class="example-chip" onclick="fillExample(2)">Org restructure</button>
+        </div>
+        <button class="btn-primary" id="analyze-btn" onclick="runAnalysis()">
+          Analyze requirements
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-block hidden" id="req-loading">
+      <div class="spinner"></div>
+      <div class="loading-label">Analyzing requirements</div>
+      <div class="loading-steps">
+        <div class="loading-step active" id="ls-1">
+          <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Parsing problem statement
+        </div>
+        <div class="loading-step" id="ls-2">
+          <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/></svg>
+          Identifying key context &amp; assumptions
+        </div>
+        <div class="loading-step" id="ls-3">
+          <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/></svg>
+          Formulating clarifying questions
+        </div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="result-block hidden" id="req-results">
+      <div class="result-card accent-blue">
+        <div class="result-card-label">Clarified problem statement</div>
+        <div class="result-card-content" id="clarified-problem"></div>
+      </div>
+      <div class="result-card accent-amber">
+        <div class="result-card-label">Key context &amp; assumptions</div>
+        <div class="tag-list" id="assumptions-list"></div>
+      </div>
+      <div class="result-card accent-purple">
+        <div class="result-card-label">Scope</div>
+        <div class="result-card-content" id="scope-content"></div>
+      </div>
+      <div class="result-card">
+        <div class="result-card-label">Clarifying questions (to consider before proceeding)</div>
+        <div class="questions-list" id="questions-list"></div>
+      </div>
+      <div class="step-action-row">
+        <button class="btn-secondary" onclick="resetStep1()">← Revise input</button>
+        <button class="btn-primary" onclick="runFunctionDecomposition()">
+          Confirm scope &amp; decompose functions
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 2: FUNCTION DECOMPOSITION -->
+  <section class="step-section hidden" id="step-functions">
+    <div class="step-header">
+      <div class="step-tag">Step 02 — Function Decomposition</div>
+      <h2 class="step-title">Functional module breakdown</h2>
+      <p class="step-sub">The problem decomposed into actionable modules, each with inputs, outputs, and recommended approach.</p>
+    </div>
+
+    <div class="loading-block hidden" id="func-loading">
+      <div class="spinner"></div>
+      <div class="loading-label">Decomposing functions</div>
+      <div class="loading-steps">
+        <div class="loading-step active" id="fl-1">
+          <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/></svg>
+          Assessing current state &amp; gaps
+        </div>
+        <div class="loading-step" id="fl-2">
+          <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/></svg>
+          Building functional module tree
+        </div>
+        <div class="loading-step" id="fl-3">
+          <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/></svg>
+          Mapping dependencies &amp; critical path
+        </div>
+      </div>
+    </div>
+
+    <div id="func-results" class="hidden">
+      <div class="critical-path-bar" id="critical-path-bar"></div>
+      <div class="module-grid" id="module-grid"></div>
+      <div class="step-action-row">
+        <button class="btn-secondary" onclick="goToStep(1)">← Back to requirements</button>
+        <button class="btn-primary" onclick="runGenerateDeliverables()">
+          Generate deliverables
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 3: DELIVERABLES -->
+  <section class="step-section hidden" id="step-deliverables">
+    <div class="step-header">
+      <div class="step-tag">Step 03 — Deliverables</div>
+      <h2 class="step-title">Consulting outputs</h2>
+      <p class="step-sub">Your analysis packaged as a presentation deck and a shareable display card.</p>
+    </div>
+
+    <div class="loading-block hidden" id="del-loading">
+      <div class="spinner"></div>
+      <div class="loading-label">Generating deliverables</div>
+      <div class="loading-steps">
+        <div class="loading-step active" id="dl-1">
+          <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/></svg>
+          Drafting presentation slides
+        </div>
+        <div class="loading-step" id="dl-2">
+          <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/></svg>
+          Building action plan &amp; timeline
+        </div>
+        <div class="loading-step" id="dl-3">
+          <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/></svg>
+          Composing display card
+        </div>
+      </div>
+    </div>
+
+    <div id="del-results" class="hidden">
+      <div class="deliverables-tabs">
+        <button class="del-tab active" onclick="switchTab('ppt')">Presentation deck</button>
+        <button class="del-tab" onclick="switchTab('card')">Display card</button>
+      </div>
+
+      <!-- PPT PANEL -->
+      <div class="del-panel active" id="panel-ppt">
+        <div class="ppt-controls">
+          <div class="slide-nav">
+            <button class="slide-btn" id="prev-btn" onclick="prevSlide()" disabled>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+              </svg>
+            </button>
+            <span class="slide-counter" id="slide-counter">1 / 5</span>
+            <button class="slide-btn" id="next-btn" onclick="nextSlide()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+              </svg>
+            </button>
+          </div>
+          <div class="slide-dots" id="slide-dots"></div>
+          <button class="btn-secondary btn-icon" onclick="window.print()">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+            </svg>
+            Print / Export PDF
+          </button>
+        </div>
+        <div class="slide-viewport" id="slide-viewport"></div>
+      </div>
+
+      <!-- DISPLAY CARD PANEL -->
+      <div class="del-panel" id="panel-card">
+        <div class="display-card-wrapper">
+          <div class="display-card" id="display-card"></div>
+        </div>
+        <div class="output-action-row">
+          <button class="btn-secondary btn-icon" onclick="copyCard()">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+            </svg>
+            Copy as text
+          </button>
+        </div>
+      </div>
+
+      <div class="step-action-row">
+        <button class="btn-secondary" onclick="goToStep(2)">← Back to functions</button>
+        <button class="btn-primary btn-icon" onclick="resetAll()">
+          New analysis
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /app -->
+
+<script>
+/* ─── STATE ─────────────────────────────────────── */
+let state = {
+  step: 1,
+  problem: '',
+  context: {},
+  analysis: null,
+  functions: null,
+  deliverables: null,
+  currentSlide: 0,
+};
+
+/* ─── EXAMPLES ───────────────────────────────────── */
+const examples = [
+  {
+    problem: "Our Q3 margins are down 15% and we can't identify which product line is causing the compression. We have 3 product lines, a 200-person company, and a finance team but they're overwhelmed with manual reporting.",
+    industry: 'Consumer Goods',
+    size: 'Mid-market (500–5k)',
+    horizon: 'Short-term (weeks)'
+  },
+  {
+    problem: "We're a fintech startup considering expanding into Southeast Asia. We have strong product-market fit in the US but no international playbook, limited local knowledge, and unclear regulatory requirements.",
+    industry: 'Financial Services',
+    size: 'SMB (50–500)',
+    horizon: 'Medium-term (1–3 months)'
+  },
+  {
+    problem: "Post-merger, we have two overlapping engineering organizations of 400 people total with duplicated roles, different tech stacks, and low morale. Leadership wants a restructuring recommendation in 6 weeks.",
+    industry: 'Technology',
+    size: 'Enterprise (5k+)',
+    horizon: 'Medium-term (1–3 months)'
+  }
+];
+
+function fillExample(i) {
+  const e = examples[i];
+  document.getElementById('problem-input').value = e.problem;
+  document.getElementById('industry').value = e.industry;
+  document.getElementById('company-size').value = e.size;
+  document.getElementById('time-horizon').value = e.horizon;
+}
+
+/* ─── API KEY ────────────────────────────────────── */
+function getApiKey() { return document.getElementById('api-key-input').value.trim(); }
+function isLiveMode() { return getApiKey().startsWith('sk-ant-'); }
+
+function updateApiStatus() {
+  const el = document.getElementById('api-status');
+  if (isLiveMode()) {
+    el.textContent = 'LIVE'; el.className = 'api-status live';
+  } else {
+    el.textContent = 'DEMO MODE'; el.className = 'api-status demo';
+  }
+}
+
+/* ─── CLAUDE API ─────────────────────────────────── */
+async function callClaude(systemPrompt, userMessage) {
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': getApiKey(),
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true',
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 2000,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userMessage }],
+    }),
+  });
+  if (!resp.ok) throw new Error(`API error: ${resp.status}`);
+  const data = await resp.json();
+  const text = data.content[0].text;
+  const match = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+  return JSON.parse(match ? match[1] : text);
+}
+
+/* ─── MOCK DATA ──────────────────────────────────── */
+function getMockAnalysis(problem) {
+  const shortP = problem.slice(0, 60) + (problem.length > 60 ? '...' : '');
+  return {
+    clarified_problem: `The organization is facing ${shortP.toLowerCase()} — a multi-dimensional challenge that requires structured analysis across data, process, and organizational dimensions before solutions can be designed.`,
+    assumptions: ['Historical data exists and is accessible','Stakeholders are aligned on urgency','Resources are available to act on recommendations','No major regulatory constraints beyond standard compliance'],
+    scope: 'Diagnostic assessment of root causes, functional decomposition of the problem space, and a structured recommendation set with a 30-60-90 day action plan.',
+    urgency: 'high',
+    clarifying_questions: [
+      'What data sources are currently available for analysis, and how fresh is the data?',
+      'Who are the key decision-makers and what is the approval process for recommended changes?',
+      'Have previous initiatives attempted to address this problem? If so, what failed?'
+    ]
+  };
+}
+
+function getMockFunctions(analysis) {
+  return {
+    modules: [
+      { id:1, name:'Data & Diagnostics', description:'Establish a clean baseline by auditing available data, identifying gaps, and building a unified view of current state metrics.', input:'Raw data sources, reports, dashboards', output:'Validated baseline dataset, gap inventory', priority:'high', complexity:'medium', approach:'Audit existing data pipelines; identify KPI definitions and inconsistencies; produce a single source of truth.' },
+      { id:2, name:'Root Cause Analysis', description:'Apply structured analytical frameworks to identify the primary and secondary drivers of the problem.', input:'Baseline dataset, stakeholder interviews', output:'Validated root cause hypothesis, driver tree', priority:'high', complexity:'high', approach:'Use issue tree decomposition and hypothesis-driven testing; cross-validate with qualitative input.' },
+      { id:3, name:'Stakeholder Mapping', description:'Identify all parties affected by the problem and the solution, and model influence and alignment.', input:'Org chart, process documentation', output:'Stakeholder map, influence matrix, alignment gaps', priority:'medium', complexity:'low', approach:'Structured interviews + secondary research; produce a RACI-ready stakeholder model.' },
+      { id:4, name:'Solution Design', description:'Generate and evaluate solution options with clear trade-off analysis and prioritization criteria.', input:'Root cause findings, stakeholder constraints', output:'Prioritized solution options with trade-offs', priority:'high', complexity:'high', approach:'Develop 3 solution scenarios; evaluate on impact, feasibility, and speed; recommend one with contingencies.' },
+      { id:5, name:'Implementation Planning', description:'Convert the selected solution into a sequenced, resourced action plan with milestones and success metrics.', input:'Selected solution, available resources', output:'30-60-90 day roadmap, owner assignments', priority:'medium', complexity:'medium', approach:'Break solution into workstreams; assign owners and due dates; define leading indicators for each milestone.' },
+      { id:6, name:'Risk & Monitoring', description:'Identify implementation risks and design an ongoing tracking mechanism to detect early deviations.', input:'Action plan, historical failure modes', output:'Risk register, monitoring dashboard spec', priority:'medium', complexity:'low', approach:'Structured risk brainstorm; define early-warning KPIs; set up bi-weekly review cadence.' }
+    ],
+    critical_path: ['Data & Diagnostics', 'Root Cause Analysis', 'Solution Design', 'Implementation Planning']
+  };
+}
+
+function getMockDeliverables(analysis, functions) {
+  const modules = functions.modules;
+  return {
+    slides: [
+      { type:'title', tag:'Signal2Action', title: analysis.clarified_problem.split('.')[0], subtitle: analysis.scope },
+      { type:'problem', tag:'Current State', title:'The challenge', bullets: analysis.assumptions },
+      { type:'modules', tag:'Functional Architecture', title:'Module breakdown', modules: modules.slice(0,6) },
+      { type:'solution', tag:'Recommendations', title:'Proposed solution', bullets: ['Prioritize data foundation before analysis — bad data produces bad insights','Address root causes in sequence: diagnostic → structural → operational','Reserve 20% of timeline for stakeholder alignment and change management','Build monitoring into the plan from day one, not as an afterthought'] },
+      { type:'timeline', tag:'Action Plan', title:'30 · 60 · 90 day roadmap', timeline: {
+        '30 days': ['Complete data audit', 'Root cause validated', 'Stakeholders aligned'],
+        '60 days': ['Solution designed', 'Resources committed', 'Pilot launched'],
+        '90 days': ['Full rollout begun', 'KPIs tracking', 'First review complete']
+      }}
+    ],
+    summary_card: {
+      headline: analysis.clarified_problem.split('.')[0],
+      scope: analysis.scope,
+      modules: modules.map(m => m.name),
+      key_actions: ['Establish data baseline and validate root cause hypothesis', 'Design solution with 3 trade-off scenarios', 'Launch 90-day implementation roadmap'],
+      timeline: '30–90 days to first impact'
+    }
+  };
+}
+
+/* ─── LOADING ANIMATION HELPERS ─────────────────── */
+function animateLoadingSteps(prefix, total, delayMs) {
+  const steps = [];
+  for (let i = 1; i <= total; i++) steps.push(document.getElementById(`${prefix}${i}`));
+  steps[0].classList.add('active');
+  steps[0].classList.remove('done');
+  for (let i = 1; i < total; i++) {
+    setTimeout(() => {
+      if (steps[i-1]) { steps[i-1].classList.remove('active'); steps[i-1].classList.add('done'); }
+      if (steps[i]) steps[i].classList.add('active');
+    }, delayMs * i);
+  }
+}
+
+/* ─── STEP 1: ANALYSIS ───────────────────────────── */
+async function runAnalysis() {
+  const problem = document.getElementById('problem-input').value.trim();
+  if (!problem || problem.length < 20) {
+    document.getElementById('problem-input').focus();
+    document.getElementById('problem-input').style.outline = '2px solid var(--amber)';
+    setTimeout(() => document.getElementById('problem-input').style.outline = '', 1500);
+    return;
+  }
+
+  state.problem = problem;
+  state.context = {
+    industry: document.getElementById('industry').value,
+    companySize: document.getElementById('company-size').value,
+    timeHorizon: document.getElementById('time-horizon').value,
+  };
+
+  document.getElementById('req-form').classList.add('hidden');
+  document.getElementById('req-loading').classList.remove('hidden');
+  document.getElementById('analyze-btn').disabled = true;
+  animateLoadingSteps('ls-', 3, 900);
+
+  try {
+    let analysis;
+    if (isLiveMode()) {
+      const systemPrompt = `You are an expert consulting analyst. Analyze the business problem and return ONLY valid JSON (no markdown, no explanation) with this exact schema:
+{"clarified_problem":"string","assumptions":["string"],"scope":"string","urgency":"high|medium|low","clarifying_questions":["string","string","string"]}`;
+      const userMsg = `Problem: ${problem}\nIndustry: ${state.context.industry || 'Not specified'}\nCompany size: ${state.context.companySize || 'Not specified'}\nTime horizon: ${state.context.timeHorizon || 'Not specified'}`;
+      analysis = await callClaude(systemPrompt, userMsg);
+    } else {
+      await new Promise(r => setTimeout(r, 2800));
+      analysis = getMockAnalysis(problem);
+    }
+    state.analysis = analysis;
+    renderAnalysisResults(analysis);
+  } catch (err) {
+    console.error(err);
+    state.analysis = getMockAnalysis(problem);
+    renderAnalysisResults(state.analysis);
+  }
+}
+
+function renderAnalysisResults(a) {
+  document.getElementById('req-loading').classList.add('hidden');
+  document.getElementById('req-results').classList.remove('hidden');
+  document.getElementById('clarified-problem').textContent = a.clarified_problem;
+  document.getElementById('scope-content').textContent = a.scope;
+
+  const aList = document.getElementById('assumptions-list');
+  aList.innerHTML = '';
+  (a.assumptions||[]).forEach(t => {
+    const tag = document.createElement('span');
+    tag.className = 'tag'; tag.textContent = t; aList.appendChild(tag);
+  });
+
+  const qList = document.getElementById('questions-list');
+  qList.innerHTML = '';
+  (a.clarifying_questions||[]).forEach((q,i) => {
+    const div = document.createElement('div');
+    div.className = 'question-item';
+    div.innerHTML = `<span class="q-num">Q${i+1}</span><span>${q}</span>`;
+    qList.appendChild(div);
+  });
+}
+
+function resetStep1() {
+  document.getElementById('req-results').classList.add('hidden');
+  document.getElementById('req-loading').classList.add('hidden');
+  document.getElementById('req-form').classList.remove('hidden');
+  document.getElementById('analyze-btn').disabled = false;
+}
+
+/* ─── STEP 2: FUNCTION DECOMPOSITION ────────────── */
+async function runFunctionDecomposition() {
+  goToStep(2);
+  document.getElementById('func-loading').classList.remove('hidden');
+  document.getElementById('func-results').classList.add('hidden');
+  animateLoadingSteps('fl-', 3, 1000);
+
+  try {
+    let functions;
+    if (isLiveMode()) {
+      const systemPrompt = `You are an expert consulting analyst. Based on the problem analysis, decompose into functional modules. Return ONLY valid JSON with this exact schema:
+{"modules":[{"id":1,"name":"string","description":"string","input":"string","output":"string","priority":"high|medium|low","complexity":"high|medium|low","approach":"string"}],"critical_path":["module name strings"]}`;
+      const userMsg = `Clarified problem: ${state.analysis.clarified_problem}\nScope: ${state.analysis.scope}\nContext: ${JSON.stringify(state.context)}`;
+      functions = await callClaude(systemPrompt, userMsg);
+    } else {
+      await new Promise(r => setTimeout(r, 3100));
+      functions = getMockFunctions(state.analysis);
+    }
+    state.functions = functions;
+    renderFunctions(functions);
+  } catch (err) {
+    state.functions = getMockFunctions(state.analysis);
+    renderFunctions(state.functions);
+  }
+}
+
+function renderFunctions(f) {
+  document.getElementById('func-loading').classList.add('hidden');
+  document.getElementById('func-results').classList.remove('hidden');
+
+  const cp = document.getElementById('critical-path-bar');
+  cp.innerHTML = `<span class="critical-path-label">Critical Path</span><div class="critical-path-items">${
+    (f.critical_path||[]).map((n,i,a) =>
+      `<span class="cp-item">${n}</span>${i<a.length-1?'<span class="cp-arrow">→</span>':''}`
+    ).join('')
+  }</div>`;
+
+  const grid = document.getElementById('module-grid');
+  grid.innerHTML = '';
+  (f.modules||[]).forEach(m => {
+    const card = document.createElement('div');
+    card.className = `module-card p-${m.priority}`;
+    card.innerHTML = `
+      <div class="module-header">
+        <span class="module-num">M${String(m.id).padStart(2,'0')}</span>
+        <span class="module-name">${m.name}</span>
+        <div class="module-badges">
+          <span class="badge priority-${m.priority}">${m.priority}</span>
+          <span class="badge complexity-${m.complexity}">${m.complexity} complexity</span>
+        </div>
+      </div>
+      <p class="module-desc">${m.description}</p>
+      <div class="module-io">
+        <div class="module-io-box"><div class="io-l">Input</div><div class="io-v">${m.input}</div></div>
+        <div class="module-io-box"><div class="io-l">Output</div><div class="io-v">${m.output}</div></div>
+      </div>
+      <div class="module-approach">${m.approach}</div>`;
+    grid.appendChild(card);
+  });
+}
+
+/* ─── STEP 3: DELIVERABLES ───────────────────────── */
+async function runGenerateDeliverables() {
+  goToStep(3);
+  document.getElementById('del-loading').classList.remove('hidden');
+  document.getElementById('del-results').classList.add('hidden');
+  animateLoadingSteps('dl-', 3, 1000);
+
+  try {
+    let deliverables;
+    if (isLiveMode()) {
+      const systemPrompt = `You are a consulting deliverable generator. Create presentation slides and a summary card. Return ONLY valid JSON with this exact schema:
+{"slides":[{"type":"title|problem|modules|solution|timeline","tag":"string","title":"string","subtitle":"string","bullets":["string"],"modules":[{"name":"string","description":"string"}],"timeline":{"30 days":["string"],"60 days":["string"],"90 days":["string"]}}],"summary_card":{"headline":"string","scope":"string","modules":["string"],"key_actions":["string"],"timeline":"string"}}
+Generate exactly 5 slides: title, problem, modules, solution, timeline.`;
+      const userMsg = `Problem: ${state.analysis.clarified_problem}\nScope: ${state.analysis.scope}\nModules: ${(state.functions.modules||[]).map(m=>m.name).join(', ')}\nCritical path: ${(state.functions.critical_path||[]).join(' → ')}`;
+      deliverables = await callClaude(systemPrompt, userMsg);
+    } else {
+      await new Promise(r => setTimeout(r, 3200));
+      deliverables = getMockDeliverables(state.analysis, state.functions);
+    }
+    state.deliverables = deliverables;
+    state.currentSlide = 0;
+    renderPPT(deliverables.slides);
+    renderDisplayCard(deliverables.summary_card);
+  } catch (err) {
+    state.deliverables = getMockDeliverables(state.analysis, state.functions);
+    state.currentSlide = 0;
+    renderPPT(state.deliverables.slides);
+    renderDisplayCard(state.deliverables.summary_card);
+  }
+}
+
+/* ─── PPT RENDERER ───────────────────────────────── */
+function renderPPT(slides) {
+  document.getElementById('del-loading').classList.add('hidden');
+  document.getElementById('del-results').classList.remove('hidden');
+
+  const vp = document.getElementById('slide-viewport');
+  vp.innerHTML = '';
+  slides.forEach((s, i) => {
+    const div = document.createElement('div');
+    div.className = `slide ${getSlideClass(s.type)} ${i===0?'active':''}`;
+    div.id = `slide-${i}`;
+    div.innerHTML = buildSlideHTML(s, i, slides.length);
+    vp.appendChild(div);
+  });
+
+  const dots = document.getElementById('slide-dots');
+  dots.innerHTML = '';
+  slides.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = `slide-dot ${i===0?'active':''}`;
+    d.onclick = () => goToSlide(i);
+    dots.appendChild(d);
+  });
+
+  document.getElementById('slide-counter').textContent = `1 / ${slides.length}`;
+  document.getElementById('prev-btn').disabled = true;
+  document.getElementById('next-btn').disabled = slides.length <= 1;
+}
+
+function getSlideClass(type) {
+  return {title:'slide-title', problem:'slide-dark', modules:'slide-title', solution:'slide-dark', timeline:'slide-title'}[type] || 'slide-title';
+}
+
+function buildSlideHTML(s, i, total) {
+  const isLight = false;
+  let body = '';
+  if (s.type === 'title') {
+    body = `<div class="slide-tag-text">${s.tag||''}</div>
+      <div class="slide-h1">${s.title||''}</div>
+      <div class="slide-sub-text">${s.subtitle||s.bullets?.[0]||''}</div>`;
+  } else if (s.type === 'problem' || s.type === 'solution') {
+    body = `<div class="slide-tag-text">${s.tag||''}</div>
+      <div class="slide-h1">${s.title||''}</div>
+      <div class="slide-bullets">${(s.bullets||[]).map(b=>`<div class="slide-bullet">${b}</div>`).join('')}</div>`;
+  } else if (s.type === 'modules') {
+    body = `<div class="slide-tag-text">${s.tag||''}</div>
+      <div class="slide-h1">${s.title||''}</div>
+      <div class="slide-modules-grid">${(s.modules||[]).slice(0,6).map(m=>`
+        <div class="slide-module-box">
+          <div class="slide-module-name">${m.name}</div>
+          <div class="slide-module-desc">${(m.description||'').slice(0,60)}...</div>
+        </div>`).join('')}</div>`;
+  } else if (s.type === 'timeline') {
+    const tl = s.timeline || {};
+    body = `<div class="slide-tag-text">${s.tag||''}</div>
+      <div class="slide-h1">${s.title||''}</div>
+      <div class="slide-timeline">${Object.entries(tl).map(([k,v])=>`
+        <div class="timeline-col">
+          <div class="timeline-label">${k}</div>
+          ${(v||[]).map(item=>`<div class="timeline-item">${item}</div>`).join('')}
+        </div>`).join('')}</div>`;
+  }
+  return `${body}
+    <div class="slide-footer">
+      <div class="slide-footer-brand">Signal2Action</div>
+      <div class="slide-page">${i+1} / ${total}</div>
+    </div>`;
+}
+
+function goToSlide(n) {
+  const slides = document.querySelectorAll('.slide');
+  const dots = document.querySelectorAll('.slide-dot');
+  slides[state.currentSlide]?.classList.remove('active');
+  dots[state.currentSlide]?.classList.remove('active');
+  state.currentSlide = n;
+  slides[n]?.classList.add('active');
+  dots[n]?.classList.add('active');
+  document.getElementById('slide-counter').textContent = `${n+1} / ${slides.length}`;
+  document.getElementById('prev-btn').disabled = n === 0;
+  document.getElementById('next-btn').disabled = n === slides.length - 1;
+}
+
+function prevSlide() { if (state.currentSlide > 0) goToSlide(state.currentSlide - 1); }
+function nextSlide() {
+  const count = document.querySelectorAll('.slide').length;
+  if (state.currentSlide < count - 1) goToSlide(state.currentSlide + 1);
+}
+
+/* ─── DISPLAY CARD ───────────────────────────────── */
+function renderDisplayCard(card) {
+  const el = document.getElementById('display-card');
+  el.innerHTML = `
+    <div class="dc-header">
+      <div class="dc-brand">Signal2Action</div>
+      <div class="dc-headline">${card.headline}</div>
+      <div class="dc-scope">${card.scope}</div>
+    </div>
+    <div class="dc-body">
+      <div>
+        <div class="dc-section-label">Functional modules</div>
+        <div class="dc-modules-row">${(card.modules||[]).map(m=>`<span class="dc-module-tag">${m}</span>`).join('')}</div>
+      </div>
+      <div>
+        <div class="dc-section-label">Key actions</div>
+        <div class="dc-actions-list">${(card.key_actions||[]).map((a,i)=>`<div class="dc-action"><span class="dc-action-num">${String(i+1).padStart(2,'0')}</span><span>${a}</span></div>`).join('')}</div>
+      </div>
+    </div>
+    <div class="dc-footer">
+      <span class="dc-timeline-pill">${card.timeline||''}</span>
+      <span class="dc-event">Veris Agent Jam · April 2025</span>
+    </div>`;
+}
+
+function copyCard() {
+  const card = state.deliverables?.summary_card;
+  if (!card) return;
+  const text = `Signal2Action Analysis\n\n${card.headline}\n\nScope: ${card.scope}\n\nModules: ${(card.modules||[]).join(', ')}\n\nKey Actions:\n${(card.key_actions||[]).map((a,i)=>`${i+1}. ${a}`).join('\n')}\n\nTimeline: ${card.timeline}`;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = event.currentTarget;
+    const orig = btn.innerHTML;
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.innerHTML = orig, 2000);
+  });
+}
+
+/* ─── TABS ───────────────────────────────────────── */
+function switchTab(tab) {
+  document.querySelectorAll('.del-tab').forEach((t,i) => t.classList.toggle('active', ['ppt','card'][i]===tab));
+  document.querySelectorAll('.del-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(`panel-${tab}`).classList.add('active');
+}
+
+/* ─── NAVIGATION ─────────────────────────────────── */
+function goToStep(n) {
+  state.step = n;
+  ['requirements','functions','deliverables'].forEach((s,i) => {
+    document.getElementById(`step-${s}`).classList.toggle('hidden', i+1 !== n);
+  });
+  for (let i=1; i<=3; i++) {
+    const dot = document.getElementById(`sdot-${i}`);
+    dot.classList.toggle('active', i===n);
+    dot.classList.toggle('done', i<n);
+    const navBtn = document.querySelectorAll('.nav-step-btn')[i-1];
+    if (navBtn) navBtn.classList.toggle('active', i===n);
+  }
+  for (let i=1; i<=2; i++) {
+    document.getElementById(`sline-${i}`).classList.toggle('done', i<n);
+  }
+  document.getElementById('app').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+function scrollToStep(n) {
+  goToStep(n);
+}
+
+function resetAll() {
+  state = { step:1, problem:'', context:{}, analysis:null, functions:null, deliverables:null, currentSlide:0 };
+  document.getElementById('problem-input').value = '';
+  document.getElementById('req-form').classList.remove('hidden');
+  document.getElementById('req-loading').classList.add('hidden');
+  document.getElementById('req-results').classList.add('hidden');
+  document.getElementById('analyze-btn').disabled = false;
+  goToStep(1);
+}
+
+/* ─── NAV SCROLL ─────────────────────────────────── */
+window.addEventListener('scroll', () => {
+  document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 60);
+});
+
+/* ─── KEYBOARD NAV ───────────────────────────────── */
+document.addEventListener('keydown', e => {
+  if (state.step === 3 && state.deliverables) {
+    if (e.key === 'ArrowLeft') prevSlide();
+    if (e.key === 'ArrowRight') nextSlide();
+  }
+});
+</script>
+</body>
+</html>
