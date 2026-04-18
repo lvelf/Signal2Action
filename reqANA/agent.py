@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from reqANA.models import RequirementDocument, RequirementInput
+from reqANA.models import FunctionDecompositionRequest, FunctionDecompositionResponse, RequirementDocument, RequirementInput
 
 
 REQUIREMENT_SYSTEM_PROMPT = """You are a senior consulting business analyst.
@@ -16,6 +16,18 @@ Rules:
 - Preserve uncertain points as open questions instead of inventing facts.
 - Write in crisp professional English unless the input is primarily Chinese; then write Chinese.
 - Prefer business outcomes, users, workflows, integrations, data, constraints, and acceptance signals.
+- Return only valid JSON matching the requested schema.
+"""
+
+FUNCTION_SYSTEM_PROMPT = """You are Agent 2 in a consulting workflow: Assessment and Function Decomposition.
+Given a clarified consulting requirement, break the work into functional modules that can be handed
+to delivery teams or downstream solution planning.
+
+Rules:
+- Produce practical consulting workstreams, not software-only components.
+- Each module must have a clear input, output, recommended approach, priority, and complexity.
+- Include 4 to 7 modules.
+- Critical path must contain module names from the modules list in execution order.
 - Return only valid JSON matching the requested schema.
 """
 
@@ -36,6 +48,37 @@ def _json_schema() -> dict:
         "open_questions": string_list,
         "success_metrics": string_list,
         "next_steps": string_list,
+    }
+
+
+def _function_schema() -> dict:
+    module_properties = {
+        "id": {"type": "integer"},
+        "name": {"type": "string"},
+        "description": {"type": "string"},
+        "input": {"type": "string"},
+        "output": {"type": "string"},
+        "priority": {"type": "string", "enum": ["high", "medium", "low"]},
+        "complexity": {"type": "string", "enum": ["high", "medium", "low"]},
+        "approach": {"type": "string"},
+    }
+    properties = {
+        "modules": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": module_properties,
+                "required": list(module_properties.keys()),
+                "additionalProperties": False,
+            },
+        },
+        "critical_path": {"type": "array", "items": {"type": "string"}},
+    }
+    return {
+        "type": "object",
+        "properties": properties,
+        "required": list(properties.keys()),
+        "additionalProperties": False,
     }
     return {
         "type": "object",
@@ -90,6 +133,15 @@ class RequirementAgent:
 
         return self._generate_with_openai_responses(packed_inputs)
 
+    def decompose_functions(
+        self,
+        request: FunctionDecompositionRequest,
+    ) -> FunctionDecompositionResponse:
+        payload = request.model_dump(mode="json")
+        if self.provider == "baseten":
+            return self._decompose_with_chat_completions(payload)
+        return self._decompose_with_openai_responses(payload)
+
     def _generate_with_openai_responses(self, packed_inputs: list[dict[str, Any]]) -> RequirementDocument:
         response = self.client.responses.create(
             model=self.model,
@@ -115,6 +167,33 @@ class RequirementAgent:
 
         return RequirementDocument.model_validate_json(response.output_text)
 
+    def _decompose_with_openai_responses(
+        self,
+        payload: dict[str, Any],
+    ) -> FunctionDecompositionResponse:
+        response = self.client.responses.create(
+            model=self.model,
+            input=[
+                {"role": "system", "content": FUNCTION_SYSTEM_PROMPT},
+                {
+                    "role": "user",
+                    "content": (
+                        "Decompose this consulting requirement into functional modules:\n"
+                        f"{json.dumps(payload, ensure_ascii=False, indent=2)}"
+                    ),
+                },
+            ],
+            text={
+                "format": {
+                    "type": "json_schema",
+                    "name": "function_decomposition",
+                    "schema": _function_schema(),
+                    "strict": True,
+                }
+            },
+        )
+        return FunctionDecompositionResponse.model_validate_json(response.output_text)
+
     def _generate_with_chat_completions(self, packed_inputs: list[dict[str, Any]]) -> RequirementDocument:
         schema = _json_schema()
         response = self.client.chat.completions.create(
@@ -137,6 +216,32 @@ class RequirementAgent:
         )
         content = response.choices[0].message.content or ""
         return RequirementDocument.model_validate_json(_clean_json_text(content))
+
+    def _decompose_with_chat_completions(
+        self,
+        payload: dict[str, Any],
+    ) -> FunctionDecompositionResponse:
+        schema = _function_schema()
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=[
+                {"role": "system", "content": FUNCTION_SYSTEM_PROMPT},
+                {
+                    "role": "user",
+                    "content": (
+                        "Decompose this consulting requirement into functional modules.\n\n"
+                        "Return a single valid JSON object matching this JSON schema exactly. "
+                        "Do not wrap it in markdown.\n\n"
+                        f"JSON schema:\n{json.dumps(schema, ensure_ascii=False, indent=2)}\n\n"
+                        f"Requirement context:\n{json.dumps(payload, ensure_ascii=False, indent=2)}"
+                    ),
+                },
+            ],
+            response_format={"type": "json_object"},
+            temperature=0.1,
+        )
+        content = response.choices[0].message.content or ""
+        return FunctionDecompositionResponse.model_validate_json(_clean_json_text(content))
 
 
 def render_markdown(document: RequirementDocument) -> str:

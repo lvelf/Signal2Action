@@ -37,3 +37,26 @@ class RequirementDocument(BaseModel):
     next_steps: list[str]
     generated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
+
+class FunctionModule(BaseModel):
+    id: int
+    name: str
+    description: str
+    input: str
+    output: str
+    priority: str
+    complexity: str
+    approach: str
+
+
+class FunctionDecompositionRequest(BaseModel):
+    clarified_problem: str
+    scope: str
+    assumptions: list[str] = Field(default_factory=list)
+    context: dict[str, Any] = Field(default_factory=dict)
+    requirement_document: RequirementDocument | None = None
+
+
+class FunctionDecompositionResponse(BaseModel):
+    modules: list[FunctionModule]
+    critical_path: list[str] = Field(default_factory=list)

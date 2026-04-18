@@ -2264,6 +2264,9 @@ let state = {
   problem: '',
   context: {},
   analysis: null,
+  requirementDocument: null,
+  requirementMarkdown: '',
+  requirementSavedPath: '',
   functions: null,
   deliverables: null,
   currentSlide: 0,
@@ -2837,22 +2840,37 @@ async function runFunctionDecomposition() {
   animateLoadingSteps('fl-', 3, 1000);
 
   try {
-    let functions;
-    if (isLiveMode()) {
-      const systemPrompt = `You are an expert consulting analyst. Based on the problem analysis, decompose into functional modules. Return ONLY valid JSON with this exact schema:
-{"modules":[{"id":1,"name":"string","description":"string","input":"string","output":"string","priority":"high|medium|low","complexity":"high|medium|low","approach":"string"}],"critical_path":["module name strings"]}`;
-      const userMsg = `Clarified problem: ${state.analysis.clarified_problem}\nScope: ${state.analysis.scope}\nContext: ${JSON.stringify(state.context)}`;
-      functions = await callClaude(systemPrompt, userMsg);
-    } else {
-      await new Promise(r => setTimeout(r, 3100));
-      functions = getMockFunctions(state.analysis);
-    }
+    const functions = await callReqANAFunctions();
     state.functions = functions;
     renderFunctions(functions);
   } catch (err) {
+    console.error(err);
     state.functions = getMockFunctions(state.analysis);
     renderFunctions(state.functions);
   }
+}
+
+async function callReqANAFunctions() {
+  if (!state.analysis) {
+    throw new Error('Requirement analysis must run before function decomposition.');
+  }
+
+  const response = await fetch(`${REQANA_API_BASE}/functions/decompose`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      clarified_problem: state.analysis.clarified_problem,
+      scope: state.analysis.scope,
+      assumptions: state.analysis.assumptions || [],
+      context: state.context || {},
+      requirement_document: state.requirementDocument || null,
+    }),
+  });
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({}));
+    throw new Error(payload.detail || `Function decomposition failed with ${response.status}`);
+  }
+  return response.json();
 }
 
 function renderFunctions(f) {
@@ -3082,6 +3100,9 @@ function resetAll() {
     problem:'',
     context:{},
     analysis:null,
+    requirementDocument:null,
+    requirementMarkdown:'',
+    requirementSavedPath:'',
     functions:null,
     deliverables:null,
     currentSlide:0,
