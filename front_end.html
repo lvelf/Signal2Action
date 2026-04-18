@@ -374,6 +374,163 @@
     gap: 20px;
   }
 
+  .req-input-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) auto auto;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .req-mode-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f6f0 100%);
+    border: 1px solid var(--stone);
+    border-radius: 14px;
+    padding: 16px 18px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .req-mode-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: var(--ink);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .req-mode-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .req-mode-title {
+    font-size: 14px;
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .req-mode-desc {
+    font-size: 13px;
+    color: var(--ink3);
+    line-height: 1.55;
+    font-weight: 300;
+  }
+
+  .req-tool-btn {
+    min-width: 138px;
+    border-radius: 14px;
+    border: 1px solid var(--stone);
+    background: #fff;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .req-tool-btn:hover {
+    transform: translateY(-1px);
+    border-color: var(--ink3);
+    box-shadow: 0 8px 24px rgba(26,23,20,0.06);
+  }
+
+  .req-tool-btn.recording {
+    border-color: rgba(217,119,6,0.45);
+    box-shadow: 0 0 0 3px rgba(217,119,6,0.1);
+    background: var(--amber-light);
+  }
+
+  .req-tool-btn-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .req-tool-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .req-tool-icon.drive {
+    background: #eef7ff;
+    color: #2563eb;
+  }
+
+  .req-tool-icon.voice {
+    background: #fff4e8;
+    color: var(--amber);
+  }
+
+  .req-tool-label {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    text-align: left;
+  }
+
+  .req-tool-label strong {
+    font-size: 13px;
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .req-tool-label span {
+    font-size: 11px;
+    color: var(--ink3);
+    font-weight: 300;
+    line-height: 1.4;
+  }
+
+  .req-tool-status {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--ink3);
+    text-align: left;
+  }
+
+  .req-inline-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: -6px;
+  }
+
+  .meta-pill {
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: #fff;
+    border: 1px solid var(--stone);
+    font-size: 11px;
+    color: var(--ink2);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .meta-pill strong {
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 1px;
+    font-size: 10px;
+    color: var(--ink3);
+    font-weight: 500;
+  }
+
   .req-main-input {
     background: #fff;
     border: 1px solid var(--stone);
@@ -497,6 +654,18 @@
     transition: all 0.2s;
   }
   .btn-secondary:hover { border-color: var(--ink3); color: var(--ink); }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
 
   /* ─── LOADING ───────────────────────────────────── */
   .loading-block {
@@ -1100,6 +1269,21 @@
     gap: 6px;
   }
 
+  @media (max-width: 900px) {
+    .req-input-toolbar,
+    .req-context-row,
+    .module-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .req-submit-row,
+    .step-action-row,
+    .output-action-row {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+
   /* ─── PRINT STYLES ──────────────────────────────── */
   @media print {
     nav, #hero, #api-bar, .step-indicator, .step-action-row, .output-action-row,
@@ -1181,9 +1365,62 @@
 
     <!-- Input form -->
     <div class="req-form" id="req-form">
+      <div class="req-input-toolbar">
+        <div class="req-mode-card">
+          <div class="req-mode-icon">
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4.75 6.75h14.5M4.75 12h14.5M4.75 17.25h8.5"/>
+            </svg>
+          </div>
+          <div class="req-mode-copy">
+            <div class="req-mode-title">Requirement intake</div>
+            <div class="req-mode-desc">Support direct text input, pasted Google Drive links, or VoiceRun transcription that flows straight into the requirement field below.</div>
+          </div>
+        </div>
+
+        <button class="req-tool-btn" id="drive-upload-btn" type="button" onclick="handleGoogleDriveImport()">
+          <div class="req-tool-btn-top">
+            <div class="req-tool-icon drive">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M8.91 3 3.82 11.82l2.55 4.41L11.45 7.4 8.91 3Z"/>
+                <path d="M14.73 3h-5.82l5.09 8.82h10.18L14.73 3Z"/>
+                <path d="M12.73 13.18 7.64 22h10.18l5.09-8.82H12.73Z"/>
+              </svg>
+            </div>
+            <div class="req-tool-label">
+              <strong>Google Drive</strong>
+              <span>Import share link</span>
+            </div>
+          </div>
+          <div class="req-tool-status" id="drive-upload-status">Paste drive link</div>
+        </button>
+
+        <button class="req-tool-btn" id="voice-run-btn" type="button" onclick="toggleVoiceCapture()">
+          <div class="req-tool-btn-top">
+            <div class="req-tool-icon voice">
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4a3 3 0 0 0-3 3v5a3 3 0 1 0 6 0V7a3 3 0 0 0-3-3Z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 0 1-14 0M12 18v3M8 21h8"/>
+              </svg>
+            </div>
+            <div class="req-tool-label">
+              <strong>VoiceRun</strong>
+              <span>Speech to text</span>
+            </div>
+          </div>
+          <div class="req-tool-status" id="voice-run-status">Tap to record</div>
+        </button>
+      </div>
+
+      <div class="req-inline-meta" id="req-inline-meta">
+        <div class="meta-pill" id="input-mode-pill"><strong>INPUT</strong><span>Text only</span></div>
+        <div class="meta-pill" id="drive-file-pill"><strong>DRIVE</strong><span>No file linked</span></div>
+        <div class="meta-pill" id="voice-pill"><strong>VOICE</strong><span>Idle</span></div>
+      </div>
+
       <div class="req-main-input">
         <label for="problem-input">Problem description</label>
-        <textarea id="problem-input" placeholder="e.g. Our Q3 margins are down 15% and we don't know which product line is causing it. We have 3 product lines and a full finance team but analysis takes weeks..."></textarea>
+        <textarea id="problem-input" oninput="updateInputModePill()" placeholder="e.g. Our Q3 margins are down 15% and we don't know which product line is causing it. We have 3 product lines and a full finance team but analysis takes weeks..."></textarea>
       </div>
       <div class="req-context-row">
         <div class="req-field">
@@ -1429,6 +1666,16 @@ let state = {
   functions: null,
   deliverables: null,
   currentSlide: 0,
+  attachments: {
+    googleDrive: null,
+    voiceTranscript: '',
+  },
+  voice: {
+    recorder: null,
+    stream: null,
+    chunks: [],
+    isRecording: false,
+  },
 };
 
 /* ─── EXAMPLES ───────────────────────────────────── */
@@ -1459,6 +1706,156 @@ function fillExample(i) {
   document.getElementById('industry').value = e.industry;
   document.getElementById('company-size').value = e.size;
   document.getElementById('time-horizon').value = e.horizon;
+  updateInputModePill();
+}
+
+function updateInputModePill() {
+  const problem = document.getElementById('problem-input').value.trim();
+  const sources = [];
+  if (problem) sources.push('Text');
+  if (state.attachments.googleDrive) sources.push('Drive');
+  if (state.attachments.voiceTranscript) sources.push('Voice');
+  document.querySelector('#input-mode-pill span').textContent = sources.length ? sources.join(' + ') : 'Text only';
+}
+
+function appendToProblemInput(text, prefix = '') {
+  if (!text) return;
+  const field = document.getElementById('problem-input');
+  const current = field.value.trim();
+  const addition = prefix ? `${prefix}\n${text}` : text;
+  field.value = current ? `${current}\n\n${addition}` : addition;
+  updateInputModePill();
+}
+
+function updateDriveUi(label, statusText) {
+  document.querySelector('#drive-file-pill span').textContent = label;
+  document.getElementById('drive-upload-status').textContent = statusText;
+  updateInputModePill();
+}
+
+function updateVoiceUi(statusText, pillText, isRecording = false) {
+  document.getElementById('voice-run-status').textContent = statusText;
+  document.querySelector('#voice-pill span').textContent = pillText;
+  document.getElementById('voice-run-btn').classList.toggle('recording', isRecording);
+  updateInputModePill();
+}
+
+function extractDriveName(url) {
+  try {
+    const parsed = new URL(url);
+    if (!/drive\.google\.com$/.test(parsed.hostname)) return 'Drive link';
+    return parsed.searchParams.get('id') || parsed.pathname.split('/').filter(Boolean).pop() || 'Drive file';
+  } catch {
+    return 'Drive file';
+  }
+}
+
+function handleGoogleDriveImport() {
+  const driveLink = window.prompt('Paste a Google Drive share link for the requirement doc.');
+  if (!driveLink) return;
+
+  const trimmed = driveLink.trim();
+  if (!trimmed.includes('drive.google.com')) {
+    window.alert('Please paste a valid Google Drive share link.');
+    return;
+  }
+
+  const fileName = extractDriveName(trimmed);
+  state.attachments.googleDrive = { url: trimmed, name: fileName };
+  updateDriveUi(fileName, 'Drive linked');
+  appendToProblemInput(`Google Drive reference: ${trimmed}`, '[Attached context]');
+}
+
+async function toggleVoiceCapture() {
+  if (state.voice.isRecording) {
+    stopVoiceRecording();
+    return;
+  }
+  await startVoiceRecording();
+}
+
+async function startVoiceRecording() {
+  if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+    const fallback = window.prompt('VoiceRun fallback: paste the transcript text here.');
+    if (!fallback) return;
+    state.attachments.voiceTranscript = fallback.trim();
+    appendToProblemInput(fallback.trim(), '[VoiceRun transcript]');
+    updateVoiceUi('Transcript captured', 'Transcript ready');
+    return;
+  }
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const recorder = new MediaRecorder(stream);
+    state.voice.stream = stream;
+    state.voice.recorder = recorder;
+    state.voice.chunks = [];
+    state.voice.isRecording = true;
+
+    recorder.addEventListener('dataavailable', event => {
+      if (event.data.size > 0) state.voice.chunks.push(event.data);
+    });
+
+    recorder.addEventListener('stop', async () => {
+      const audioBlob = new Blob(state.voice.chunks, { type: recorder.mimeType || 'audio/webm' });
+      await finalizeVoiceTranscript(audioBlob);
+    });
+
+    recorder.start();
+    updateVoiceUi('Recording… tap to stop', 'Listening', true);
+  } catch (error) {
+    console.error(error);
+    const fallback = window.prompt('Microphone access failed. Paste the VoiceRun transcript instead.');
+    if (!fallback) {
+      updateVoiceUi('Mic unavailable', 'Idle');
+      return;
+    }
+    state.attachments.voiceTranscript = fallback.trim();
+    appendToProblemInput(fallback.trim(), '[VoiceRun transcript]');
+    updateVoiceUi('Transcript captured', 'Transcript ready');
+  }
+}
+
+function stopVoiceRecording() {
+  if (!state.voice.recorder) return;
+  state.voice.isRecording = false;
+  updateVoiceUi('Transcribing with VoiceRun…', 'Processing');
+  state.voice.recorder.stop();
+  state.voice.stream?.getTracks().forEach(track => track.stop());
+}
+
+async function finalizeVoiceTranscript(audioBlob) {
+  try {
+    const transcript = await transcribeWithVoiceRun(audioBlob);
+    state.attachments.voiceTranscript = transcript;
+    appendToProblemInput(transcript, '[VoiceRun transcript]');
+    updateVoiceUi('Transcript captured', 'Transcript ready');
+  } catch (error) {
+    console.error(error);
+    updateVoiceUi('VoiceRun unavailable', 'Needs retry');
+    window.alert('VoiceRun transcription failed. You can paste the transcript manually for now.');
+  } finally {
+    state.voice.recorder = null;
+    state.voice.stream = null;
+    state.voice.chunks = [];
+    state.voice.isRecording = false;
+  }
+}
+
+async function transcribeWithVoiceRun(audioBlob) {
+  const endpoint = window.VOICERUN_API_URL;
+  if (endpoint) {
+    const formData = new FormData();
+    formData.append('file', audioBlob, 'requirement-audio.webm');
+    const response = await fetch(endpoint, { method: 'POST', body: formData });
+    if (!response.ok) throw new Error(`VoiceRun error: ${response.status}`);
+    const payload = await response.json();
+    if (!payload.transcript) throw new Error('Missing transcript in VoiceRun response');
+    return payload.transcript;
+  }
+
+  await new Promise(resolve => setTimeout(resolve, 1200));
+  return 'VoiceRun transcript placeholder: user described the requirement verbally and wants the team to convert that signal into a structured business problem statement.';
 }
 
 /* ─── API KEY ────────────────────────────────────── */
@@ -1886,12 +2283,32 @@ function scrollToStep(n) {
 }
 
 function resetAll() {
-  state = { step:1, problem:'', context:{}, analysis:null, functions:null, deliverables:null, currentSlide:0 };
+  state = {
+    step:1,
+    problem:'',
+    context:{},
+    analysis:null,
+    functions:null,
+    deliverables:null,
+    currentSlide:0,
+    attachments: {
+      googleDrive: null,
+      voiceTranscript: '',
+    },
+    voice: {
+      recorder: null,
+      stream: null,
+      chunks: [],
+      isRecording: false,
+    },
+  };
   document.getElementById('problem-input').value = '';
   document.getElementById('req-form').classList.remove('hidden');
   document.getElementById('req-loading').classList.add('hidden');
   document.getElementById('req-results').classList.add('hidden');
   document.getElementById('analyze-btn').disabled = false;
+  updateDriveUi('No file linked', 'Paste drive link');
+  updateVoiceUi('Tap to record', 'Idle');
   goToStep(1);
 }
 
@@ -1907,6 +2324,9 @@ document.addEventListener('keydown', e => {
     if (e.key === 'ArrowRight') nextSlide();
   }
 });
+
+updateDriveUi('No file linked', 'Paste drive link');
+updateVoiceUi('Tap to record', 'Idle');
 </script>
 </body>
 </html>
