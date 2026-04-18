@@ -70,8 +70,13 @@ def health() -> dict[str, str]:
 def debug_config() -> dict[str, str | int | bool | None]:
     """Show non-secret runtime config loaded by the API process."""
     baseten_key = os.getenv("BASETEN_API_KEY", "")
+    openai_key = os.getenv("OPENAI_API_KEY", "")
     return {
         "model_provider": os.getenv("MODEL_PROVIDER"),
+        "openai_model": os.getenv("OPENAI_MODEL"),
+        "openai_api_key_present": bool(openai_key),
+        "openai_api_key_length": len(openai_key),
+        "openai_api_key_masked": _mask_secret(openai_key),
         "baseten_base_url": os.getenv("BASETEN_BASE_URL"),
         "baseten_model": os.getenv("BASETEN_MODEL"),
         "baseten_api_key_present": bool(baseten_key),

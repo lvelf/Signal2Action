@@ -178,7 +178,8 @@ class RequirementAgent:
 
         self.provider = os.getenv("MODEL_PROVIDER", "openai").lower()
         if self.provider == "baseten":
-            self.model = model or os.getenv("BASETEN_MODEL", "deepseek-ai/DeepSeek-V3.1")
+            self.model = model 
+            # or os.getenv("BASETEN_MODEL", "deepseek-ai/DeepSeek-V3.1")
             self.client = OpenAI(
                 base_url=os.getenv("BASETEN_BASE_URL", "https://inference.baseten.co/v1"),
                 api_key=os.environ["BASETEN_API_KEY"],
