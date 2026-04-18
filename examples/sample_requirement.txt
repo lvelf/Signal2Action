@@ -1,0 +1,12 @@
+Client wants a consulting team to assess current sales operations and recommend a CRM rollout.
+Pain points:
+- Leads are tracked in spreadsheets.
+- Sales managers cannot see pipeline health by region.
+- Marketing handoff is inconsistent.
+- Leadership wants a 90-day implementation roadmap and cost estimate.
+
+Known constraints:
+- Must integrate with existing finance reporting.
+- US and China sales teams need access.
+- Initial budget target is under 250k USD.
+

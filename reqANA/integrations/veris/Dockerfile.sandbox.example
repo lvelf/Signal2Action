@@ -1,0 +1,10 @@
+ARG GVISOR_BASE
+FROM ${GVISOR_BASE}
+
+COPY pyproject.toml /agent/
+COPY reqANA /agent/reqANA
+
+WORKDIR /agent
+
+RUN pip install -e .
+
