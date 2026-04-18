@@ -1,0 +1,13 @@
+{
+  "scenario_id": "margin_q3",
+  "title": "Q3 Margin Compression",
+  "request": {
+    "text_input": "Our margins are down in Q3. We need to know what to do next.",
+    "voice_transcript": "Our margins are down in Q3. What should we do?",
+    "attachments": [
+      "Q3_financial_report.pdf",
+      "sku_margin_export.xlsx"
+    ],
+    "context_notes": "Leadership wants a concrete plan in under three weeks."
+  }
+}

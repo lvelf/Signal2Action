@@ -1,0 +1,438 @@
+{
+  "margin_q3": {
+    "id": "margin_q3",
+    "title": "Q3 Margin Compression",
+    "seed_request": {
+      "text_input": "Our margins are down in Q3. We need to know what to do next.",
+      "voice_transcript": "Our margins are down in Q3. What should we do?",
+      "attachments": ["Q3_financial_report.pdf", "sku_margin_export.xlsx"],
+      "context_notes": "Leadership wants a concrete plan in under three weeks."
+    },
+    "intake": {
+      "problem_statement": "The business has a Q3 margin compression issue and needs a scoped recommendation on where to act first.",
+      "extracted_signals": [
+        "Gross margin declined during Q3",
+        "Leadership wants a decision-ready recommendation",
+        "Potential mix of pricing, COGS, and SKU portfolio issues"
+      ],
+      "assumptions": [
+        "The margin issue is concentrated in a subset of products rather than the entire portfolio",
+        "The team can implement operational changes within one quarter"
+      ],
+      "missing_information": [
+        "Margin trend by product line",
+        "Cost center detail for procurement and manufacturing",
+        "Target margin recovery threshold"
+      ],
+      "clarifying_questions": [
+        "Which product lines are driving the largest margin decline?",
+        "Is the primary goal cost reduction, price optimization, or portfolio rationalization?",
+        "What margin target does leadership expect to recover?"
+      ]
+    },
+    "clarify": {
+      "problem_statement": "Determine how Signal2Action should diagnose and reverse Q3 margin compression for the most impacted product line.",
+      "clarified_scope": "Focus the analysis on Product Line A, quantify the biggest cost and mix drivers, and propose near-term actions to recover margin.",
+      "assumptions": [
+        "Product Line A is the most material driver of Q3 margin compression",
+        "The company can influence supplier terms and SKU mix within the next quarter"
+      ],
+      "missing_information": [
+        "SKU-level profitability for Product Line A",
+        "Supplier concentration and contract renewal dates"
+      ],
+      "clarifying_questions": [
+        "Should the plan prioritize speed of recovery or longer-term margin durability?",
+        "Are there strategic SKUs that cannot be discontinued even if margins are poor?",
+        "What budget exists for operational changes or analytics support?"
+      ]
+    },
+    "review": {
+      "approved_scope": "Confirmed scope: focus on Product Line A COGS reduction and SKU portfolio cleanup, with a target to recover 4 points of gross margin within two quarters.",
+      "review_notes": [
+        "Human reviewer confirmed that pricing redesign is out of scope for this demo and wants the plan centered on operational levers."
+      ]
+    },
+    "assessment": {
+      "decomposition_summary": "The margin problem breaks into three actionable modules: establish a trusted cost view, isolate SKU-level margin dilution, and convert that diagnosis into a targeted supplier savings sprint.",
+      "current_state": [
+        "Margin visibility is fragmented across finance and operations reports",
+        "Supplier spend is concentrated in three contracts with limited negotiation cadence",
+        "SKU reporting does not clearly separate high-volume from high-margin products"
+      ],
+      "constraints": [
+        "The team needs an executive-ready recommendation within three weeks",
+        "Major ERP changes are out of scope for the initial action plan",
+        "Pricing changes require a separate commercial workstream"
+      ],
+      "dependencies": [
+        "Finance must provide a clean margin bridge by SKU",
+        "Procurement needs renewal timing for top supplier contracts",
+        "Operations needs owner assignment for weekly margin tracking"
+      ],
+      "gaps": [
+        "No consistent cost attribution layer by product line",
+        "Two underperforming SKUs consume disproportionate working capital",
+        "Supplier negotiations are reactive instead of planned"
+      ],
+      "critical_path": ["Cost Attribution Layer", "SKU Portfolio Analysis", "Supplier Negotiation Sprint"],
+      "parallel_workstreams": ["Weekly margin tracking setup"],
+      "modules": [
+        {
+          "name": "Cost Attribution Layer",
+          "objective": "Create a decision-ready view of margin drivers by SKU and product line.",
+          "inputs": ["Q3 financial report", "SKU margin export", "COGS by supplier"],
+          "outputs": ["Margin bridge", "COGS driver map", "Product line baseline"],
+          "recommended_approach": "Reconcile finance and operations data into one SKU-level margin bridge before any recommendation work.",
+          "priority": "high",
+          "complexity": "medium",
+          "depends_on": [],
+          "include_in_deliverable": true,
+          "owner_hint": "Finance lead"
+        },
+        {
+          "name": "SKU Portfolio Analysis",
+          "objective": "Separate strategic SKUs from margin-dilutive SKUs and identify rationalization candidates.",
+          "inputs": ["Margin bridge", "SKU volume trends", "Strategic product flags"],
+          "outputs": ["SKU performance heatmap", "Discontinue/retain shortlist"],
+          "recommended_approach": "Rank SKUs by margin, strategic importance, and operational burden to identify rationalization candidates.",
+          "priority": "high",
+          "complexity": "medium",
+          "depends_on": ["Cost Attribution Layer"],
+          "include_in_deliverable": true,
+          "owner_hint": "GM Product Line A"
+        },
+        {
+          "name": "Supplier Negotiation Sprint",
+          "objective": "Quantify contract renegotiation opportunities across top suppliers.",
+          "inputs": ["COGS driver map", "Supplier contract timing", "SKU cost concentration"],
+          "outputs": ["Supplier priority list", "Negotiation brief", "Savings estimate"],
+          "recommended_approach": "Target the top three contracts once the cost view shows which supplier categories drive the recoverable margin gap.",
+          "priority": "high",
+          "complexity": "high",
+          "depends_on": ["Cost Attribution Layer", "SKU Portfolio Analysis"],
+          "include_in_deliverable": true,
+          "owner_hint": "Procurement director"
+        }
+      ]
+    },
+    "external_context": [
+      {
+        "title": "Peer Margin Benchmark Snapshot",
+        "summary": "Comparable firms recovered 2-5 margin points by reducing long-tail SKUs and renegotiating concentrated supplier spend.",
+        "source": "You.com mock market scan"
+      },
+      {
+        "title": "Commodity Pressure Note",
+        "summary": "Recent commodity inflation affected input costs, but category leaders offset it with targeted procurement programs.",
+        "source": "You.com mock industry note"
+      }
+    ],
+    "plan": {
+      "summary": "Start with SKU profitability and supplier concentration because both can move margin within one quarter without pricing changes.",
+      "recommendations": [
+        {
+          "title": "Rationalize the bottom two SKUs in Product Line A",
+          "rationale": "They dilute margin, tie up working capital, and contribute limited strategic value.",
+          "priority": "high"
+        },
+        {
+          "title": "Renegotiate the top three supplier contracts",
+          "rationale": "Supplier concentration creates leverage and can unlock near-term COGS savings.",
+          "priority": "high"
+        },
+        {
+          "title": "Stand up weekly margin tracking by product line",
+          "rationale": "The organization lacks a shared operating view of margin movement and recovery progress.",
+          "priority": "medium"
+        }
+      ],
+      "tradeoffs": [
+        {
+          "option": "Aggressive SKU rationalization",
+          "upside": "Fastest path to margin recovery and complexity reduction.",
+          "downside": "May create revenue risk if stakeholders disagree on strategic SKU value.",
+          "recommendation_bias": "Recommended if leadership prioritizes speed."
+        },
+        {
+          "option": "Supplier-only approach",
+          "upside": "Less visible to customers and commercial teams.",
+          "downside": "Leaves structural SKU complexity untouched.",
+          "recommendation_bias": "Useful as a partial move, not sufficient alone."
+        }
+      ],
+      "action_plan": [
+        {
+          "phase": "Week 1",
+          "timeline": "Days 1-5",
+          "owner": "Finance + Product GM",
+          "action": "Build SKU profitability view and confirm discontinuation candidates.",
+          "outcome": "Decision-ready shortlist of margin-dilutive SKUs."
+        },
+        {
+          "phase": "Week 2",
+          "timeline": "Days 6-10",
+          "owner": "Procurement",
+          "action": "Prepare and launch negotiation briefs for top three suppliers.",
+          "outcome": "Negotiation plan with target savings by supplier."
+        },
+        {
+          "phase": "Week 3",
+          "timeline": "Days 11-15",
+          "owner": "Ops Finance",
+          "action": "Launch weekly margin tracking cadence for Product Line A.",
+          "outcome": "Operating dashboard tied to savings and recovery targets."
+        }
+      ],
+      "success_metrics": [
+        {
+          "name": "Gross margin recovery",
+          "target": "+4 pts in Product Line A",
+          "timeframe": "Within 2 quarters"
+        },
+        {
+          "name": "Supplier savings capture",
+          "target": "3-5% savings across top contracts",
+          "timeframe": "Within 90 days"
+        },
+        {
+          "name": "SKU complexity reduction",
+          "target": "Retire 2 low-performing SKUs",
+          "timeframe": "Within 30 days"
+        }
+      ]
+    },
+    "simulation": {
+      "simulation_mode": "mock",
+      "status": "passed",
+      "checks": [
+        "Handled mixed text and voice inputs",
+        "Preserved human review checkpoint before assessment",
+        "Produced structured outputs for all workflow stages"
+      ],
+      "risks": [
+        "Real-world ERP data quality may reduce confidence in SKU-level analysis",
+        "Supplier negotiation timing depends on contract renewal windows"
+      ]
+    }
+  },
+  "apac_expansion": {
+    "id": "apac_expansion",
+    "title": "APAC Expansion Strategy",
+    "seed_request": {
+      "text_input": "We think Southeast Asia might be our next market. Is that the right move?",
+      "voice_transcript": "Should we expand into Southeast Asia now?",
+      "attachments": ["tam_model.xlsx", "competitor_teardown.pdf"],
+      "context_notes": "The team needs a first-market recommendation, not a full regional strategy."
+    },
+    "intake": {
+      "problem_statement": "The business needs a fact-based recommendation on whether Southeast Asia should be the next expansion move.",
+      "extracted_signals": [
+        "Potential market expansion decision",
+        "Leadership is uncertain about geographic prioritization",
+        "A market choice must translate into a concrete launch plan"
+      ],
+      "assumptions": ["Expansion budget is limited", "Localization capacity is not yet mature"],
+      "missing_information": ["Budget ceiling", "Localization readiness", "Partner landscape"],
+      "clarifying_questions": [
+        "Is the goal market selection, launch planning, or both?",
+        "How much localization is feasible in the next 90 days?",
+        "What revenue threshold justifies expansion?"
+      ]
+    },
+    "clarify": {
+      "problem_statement": "Decide whether Southeast Asia is the right next market and identify the best first entry point.",
+      "clarified_scope": "Rank candidate markets, choose one first launch country, and define a 90-day validation plan.",
+      "assumptions": ["One pilot market is sufficient for initial validation"],
+      "missing_information": ["Local channel partner readiness", "Sales coverage model"],
+      "clarifying_questions": [
+        "Should the pilot optimize for revenue potential or operational ease?",
+        "What local compliance steps are mandatory?"
+      ]
+    },
+    "review": {
+      "approved_scope": "Confirmed scope: choose one launch market in Southeast Asia and outline a 90-day pilot GTM plan.",
+      "review_notes": ["Human reviewer deferred long-term hiring and org design decisions."]
+    },
+    "assessment": {
+      "decomposition_summary": "The expansion question decomposes into one market selection track and one pilot design track, with market ranking as the gating decision before GTM build-out.",
+      "current_state": ["No local partnerships", "No country-specific pricing strategy", "Strong internal appetite for expansion"],
+      "constraints": ["Budget limited to a pilot", "No dedicated regional team"],
+      "dependencies": ["Partner sourcing", "Localized messaging", "Basic compliance review"],
+      "gaps": ["Weak country-level prioritization", "No partner shortlist"],
+      "critical_path": ["Country Screening", "Pilot GTM Design"],
+      "parallel_workstreams": ["Compliance scoping", "Localization message testing"],
+      "modules": [
+        {
+          "name": "Country Screening",
+          "objective": "Rank launch markets by attractiveness and ease.",
+          "inputs": ["TAM model", "Competitor teardown", "Expansion budget ceiling"],
+          "outputs": ["Country scorecard", "Launch recommendation"],
+          "recommended_approach": "Score candidate countries on market upside, speed to launch, and operating complexity before committing resources.",
+          "priority": "high",
+          "complexity": "medium",
+          "depends_on": [],
+          "include_in_deliverable": true,
+          "owner_hint": "Strategy lead"
+        },
+        {
+          "name": "Pilot GTM Design",
+          "objective": "Define how the first-market pilot should be run.",
+          "inputs": ["Country scorecard", "Partner shortlist", "Localized value proposition"],
+          "outputs": ["Pilot funnel", "Channel approach"],
+          "recommended_approach": "Use the chosen market to design a 90-day pilot with partner motion, messaging, and success thresholds.",
+          "priority": "high",
+          "complexity": "medium",
+          "depends_on": ["Country Screening"],
+          "include_in_deliverable": true,
+          "owner_hint": "Growth lead"
+        }
+      ]
+    },
+    "external_context": [
+      {
+        "title": "SEA SaaS Market Snapshot",
+        "summary": "Singapore offers faster validation and lower operational drag despite lower TAM than Indonesia.",
+        "source": "You.com mock region scan"
+      }
+    ],
+    "plan": {
+      "summary": "Pilot in Singapore first, then widen based on channel and CAC evidence.",
+      "recommendations": [
+        {
+          "title": "Launch the first pilot in Singapore",
+          "rationale": "It balances ease of execution, talent access, and partnership readiness.",
+          "priority": "high"
+        }
+      ],
+      "tradeoffs": [
+        {
+          "option": "Enter larger market first",
+          "upside": "Bigger upside if execution works.",
+          "downside": "Higher complexity and slower feedback loops.",
+          "recommendation_bias": "Not recommended for the first pilot."
+        }
+      ],
+      "action_plan": [
+        {
+          "phase": "Month 1",
+          "timeline": "Days 1-30",
+          "owner": "Strategy",
+          "action": "Finalize country scorecard and partner shortlist.",
+          "outcome": "Go/no-go on Singapore pilot."
+        }
+      ],
+      "success_metrics": [
+        {
+          "name": "Pilot pipeline",
+          "target": "20 qualified opportunities",
+          "timeframe": "Within 90 days"
+        }
+      ]
+    },
+    "simulation": {
+      "simulation_mode": "mock",
+      "status": "passed",
+      "checks": ["Handled ambiguous strategic question", "Preserved scope confirmation"],
+      "risks": ["Localization effort may be underestimated"]
+    }
+  },
+  "ops_onboarding": {
+    "id": "ops_onboarding",
+    "title": "Onboarding Bottleneck",
+    "seed_request": {
+      "text_input": "Our onboarding process is slowing down and customers are frustrated.",
+      "voice_transcript": "Our onboarding is slow. Fix it.",
+      "attachments": ["support_export.csv", "onboarding_process.pdf"],
+      "context_notes": "The VP wants a 30/60/90-day operations plan."
+    },
+    "intake": {
+      "problem_statement": "The business needs to diagnose onboarding slowdown and translate it into an action plan that improves time-to-value.",
+      "extracted_signals": ["Onboarding delays", "Customer frustration", "Need for operational fix"],
+      "assumptions": ["The bottleneck is process-driven rather than purely staffing-driven"],
+      "missing_information": ["Stage-level SLA data", "Ownership map"],
+      "clarifying_questions": ["Which onboarding stage has the highest delay?", "What SLA is acceptable?"]
+    },
+    "clarify": {
+      "problem_statement": "Reduce onboarding delays and improve customer time-to-value.",
+      "clarified_scope": "Focus on handoff design, approvals, and milestone visibility across onboarding.",
+      "assumptions": ["Process redesign is within scope"],
+      "missing_information": ["Customer segmentation differences"],
+      "clarifying_questions": ["Should the first release focus on enterprise customers only?"]
+    },
+    "review": {
+      "approved_scope": "Confirmed scope: improve onboarding workflow and reduce time-to-value by 30%.",
+      "review_notes": ["Human reviewer excluded pricing and support staffing changes."]
+    },
+    "assessment": {
+      "decomposition_summary": "The onboarding bottleneck decomposes into process redesign, approval routing, and milestone visibility, with ownership clarity as the first gating step.",
+      "current_state": ["Handoffs are manual", "Approval routing is inconsistent"],
+      "constraints": ["Small ops team", "No major systems migration"],
+      "dependencies": ["CS ownership alignment", "Workflow automation support"],
+      "gaps": ["No visible milestone dashboard", "Duplicated intake fields"],
+      "critical_path": ["Handoff Redesign"],
+      "parallel_workstreams": ["Milestone dashboard design"],
+      "modules": [
+        {
+          "name": "Handoff Redesign",
+          "objective": "Remove operational friction between sales, CS, and implementation.",
+          "inputs": ["Support export", "Current onboarding SOP", "Approval timing data"],
+          "outputs": ["New handoff SOP", "Owner matrix"],
+          "recommended_approach": "Redesign ownership and approval checkpoints before adding workflow automation so the team does not automate broken steps.",
+          "priority": "high",
+          "complexity": "medium",
+          "depends_on": [],
+          "include_in_deliverable": true,
+          "owner_hint": "Ops manager"
+        }
+      ]
+    },
+    "external_context": [
+      {
+        "title": "B2B onboarding benchmark",
+        "summary": "Best-in-class onboarding teams centralize ownership and expose milestone visibility to customers.",
+        "source": "You.com mock benchmark"
+      }
+    ],
+    "plan": {
+      "summary": "Start with ownership and approval routing before automation-heavy work.",
+      "recommendations": [
+        {
+          "title": "Assign a single onboarding owner",
+          "rationale": "Ownership fragmentation is delaying execution.",
+          "priority": "high"
+        }
+      ],
+      "tradeoffs": [
+        {
+          "option": "Automate before redesigning process",
+          "upside": "Feels fast",
+          "downside": "Automates broken steps",
+          "recommendation_bias": "Avoid"
+        }
+      ],
+      "action_plan": [
+        {
+          "phase": "Month 1",
+          "timeline": "Days 1-30",
+          "owner": "Ops",
+          "action": "Redesign handoff workflow and unify intake packet.",
+          "outcome": "Reduced process friction."
+        }
+      ],
+      "success_metrics": [
+        {
+          "name": "Time to value",
+          "target": "-30%",
+          "timeframe": "Within 90 days"
+        }
+      ]
+    },
+    "simulation": {
+      "simulation_mode": "mock",
+      "status": "passed",
+      "checks": ["Handled ops workflow ambiguity"],
+      "risks": ["Staffing may still be a latent bottleneck"]
+    }
+  }
+}
