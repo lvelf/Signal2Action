@@ -5,7 +5,14 @@ import os
 from pathlib import Path
 from typing import Any
 
-from reqANA.models import FunctionDecompositionRequest, FunctionDecompositionResponse, RequirementDocument, RequirementInput
+from reqANA.models import (
+    DeliveryGenerateRequest,
+    DeliveryPlan,
+    FunctionDecompositionRequest,
+    FunctionDecompositionResponse,
+    RequirementDocument,
+    RequirementInput,
+)
 
 
 REQUIREMENT_SYSTEM_PROMPT = """You are a senior consulting business analyst.
@@ -31,6 +38,18 @@ Rules:
 - Return only valid JSON matching the requested schema.
 """
 
+DELIVERY_SYSTEM_PROMPT = """You are Agent 3 in a consulting workflow: Delivery Planning.
+Convert the approved requirement document and function decomposition into a concise consulting
+recommendation plan.
+
+Rules:
+- Use a standard consulting style: crisp executive summary, prioritized recommendations, trade-offs,
+  30/60/90 action plan, and measurable success metrics.
+- Keep outputs specific to the provided requirement and modules.
+- Do not invent unavailable client facts; frame uncertain items as planning assumptions.
+- Return only valid JSON matching the requested schema.
+"""
+
 
 def _json_schema() -> dict:
     string_list = {"type": "array", "items": {"type": "string"}}
@@ -48,6 +67,12 @@ def _json_schema() -> dict:
         "open_questions": string_list,
         "success_metrics": string_list,
         "next_steps": string_list,
+    }
+    return {
+        "type": "object",
+        "properties": properties,
+        "required": list(properties.keys()),
+        "additionalProperties": False,
     }
 
 
@@ -79,6 +104,59 @@ def _function_schema() -> dict:
         "properties": properties,
         "required": list(properties.keys()),
         "additionalProperties": False,
+    }
+
+
+def _delivery_plan_schema() -> dict:
+    recommendation = {
+        "type": "object",
+        "properties": {
+            "title": {"type": "string"},
+            "rationale": {"type": "string"},
+            "priority": {"type": "string", "enum": ["high", "medium", "low"]},
+        },
+        "required": ["title", "rationale", "priority"],
+        "additionalProperties": False,
+    }
+    tradeoff = {
+        "type": "object",
+        "properties": {
+            "option": {"type": "string"},
+            "upside": {"type": "string"},
+            "downside": {"type": "string"},
+            "recommendation_bias": {"type": "string"},
+        },
+        "required": ["option", "upside", "downside", "recommendation_bias"],
+        "additionalProperties": False,
+    }
+    action_item = {
+        "type": "object",
+        "properties": {
+            "phase": {"type": "string"},
+            "timeline": {"type": "string"},
+            "owner": {"type": "string"},
+            "action": {"type": "string"},
+            "outcome": {"type": "string"},
+        },
+        "required": ["phase", "timeline", "owner", "action", "outcome"],
+        "additionalProperties": False,
+    }
+    success_metric = {
+        "type": "object",
+        "properties": {
+            "name": {"type": "string"},
+            "target": {"type": "string"},
+            "timeframe": {"type": "string"},
+        },
+        "required": ["name", "target", "timeframe"],
+        "additionalProperties": False,
+    }
+    properties = {
+        "summary": {"type": "string"},
+        "recommendations": {"type": "array", "items": recommendation},
+        "tradeoffs": {"type": "array", "items": tradeoff},
+        "action_plan": {"type": "array", "items": action_item},
+        "success_metrics": {"type": "array", "items": success_metric},
     }
     return {
         "type": "object",
@@ -142,6 +220,12 @@ class RequirementAgent:
             return self._decompose_with_chat_completions(payload)
         return self._decompose_with_openai_responses(payload)
 
+    def generate_delivery_plan(self, request: DeliveryGenerateRequest) -> DeliveryPlan:
+        payload = request.model_dump(mode="json")
+        if self.provider == "baseten":
+            return self._delivery_with_chat_completions(payload)
+        return self._delivery_with_openai_responses(payload)
+
     def _generate_with_openai_responses(self, packed_inputs: list[dict[str, Any]]) -> RequirementDocument:
         response = self.client.responses.create(
             model=self.model,
@@ -194,6 +278,30 @@ class RequirementAgent:
         )
         return FunctionDecompositionResponse.model_validate_json(response.output_text)
 
+    def _delivery_with_openai_responses(self, payload: dict[str, Any]) -> DeliveryPlan:
+        response = self.client.responses.create(
+            model=self.model,
+            input=[
+                {"role": "system", "content": DELIVERY_SYSTEM_PROMPT},
+                {
+                    "role": "user",
+                    "content": (
+                        "Generate a consulting delivery plan from this requirement and decomposition:\n"
+                        f"{json.dumps(payload, ensure_ascii=False, indent=2)}"
+                    ),
+                },
+            ],
+            text={
+                "format": {
+                    "type": "json_schema",
+                    "name": "delivery_plan",
+                    "schema": _delivery_plan_schema(),
+                    "strict": True,
+                }
+            },
+        )
+        return DeliveryPlan.model_validate_json(response.output_text)
+
     def _generate_with_chat_completions(self, packed_inputs: list[dict[str, Any]]) -> RequirementDocument:
         schema = _json_schema()
         response = self.client.chat.completions.create(
@@ -242,6 +350,29 @@ class RequirementAgent:
         )
         content = response.choices[0].message.content or ""
         return FunctionDecompositionResponse.model_validate_json(_clean_json_text(content))
+
+    def _delivery_with_chat_completions(self, payload: dict[str, Any]) -> DeliveryPlan:
+        schema = _delivery_plan_schema()
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=[
+                {"role": "system", "content": DELIVERY_SYSTEM_PROMPT},
+                {
+                    "role": "user",
+                    "content": (
+                        "Generate a consulting delivery plan from this requirement and decomposition.\n\n"
+                        "Return a single valid JSON object matching this JSON schema exactly. "
+                        "Do not wrap it in markdown.\n\n"
+                        f"JSON schema:\n{json.dumps(schema, ensure_ascii=False, indent=2)}\n\n"
+                        f"Delivery context:\n{json.dumps(payload, ensure_ascii=False, indent=2)}"
+                    ),
+                },
+            ],
+            response_format={"type": "json_object"},
+            temperature=0.2,
+        )
+        content = response.choices[0].message.content or ""
+        return DeliveryPlan.model_validate_json(_clean_json_text(content))
 
 
 def render_markdown(document: RequirementDocument) -> str:

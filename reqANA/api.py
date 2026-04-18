@@ -9,9 +9,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from reqANA.agent import RequirementAgent, render_markdown, save_markdown
+from reqANA.delivery import build_delivery_response
 from reqANA.file_loader import read_requirement_file
 from reqANA.google_drive_loader import read_google_drive_inputs
 from reqANA.models import (
+    DeliveryGenerateRequest,
+    DeliveryGenerateResponse,
     FunctionDecompositionRequest,
     FunctionDecompositionResponse,
     IntakeSource,
@@ -106,6 +109,15 @@ def functions_decompose(payload: FunctionDecompositionRequest) -> FunctionDecomp
         return RequirementAgent().decompose_functions(payload)
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"Function decomposition failed: {exc}") from exc
+
+
+@app.post("/delivery/generate", response_model=DeliveryGenerateResponse)
+def delivery_generate(payload: DeliveryGenerateRequest) -> DeliveryGenerateResponse:
+    try:
+        plan = RequirementAgent().generate_delivery_plan(payload)
+        return build_delivery_response(payload, plan)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Delivery generation failed: {exc}") from exc
 
 
 @app.post("/veris/requirement-agent", response_model=VerisResponse)

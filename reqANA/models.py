@@ -60,3 +60,69 @@ class FunctionDecompositionRequest(BaseModel):
 class FunctionDecompositionResponse(BaseModel):
     modules: list[FunctionModule]
     critical_path: list[str] = Field(default_factory=list)
+
+
+class Recommendation(BaseModel):
+    title: str
+    rationale: str
+    priority: str
+
+
+class Tradeoff(BaseModel):
+    option: str
+    upside: str
+    downside: str
+    recommendation_bias: str
+
+
+class ActionItem(BaseModel):
+    phase: str
+    timeline: str
+    owner: str
+    action: str
+    outcome: str
+
+
+class SuccessMetric(BaseModel):
+    name: str
+    target: str
+    timeframe: str
+
+
+class DeliveryPlan(BaseModel):
+    summary: str
+    recommendations: list[Recommendation]
+    tradeoffs: list[Tradeoff]
+    action_plan: list[ActionItem]
+    success_metrics: list[SuccessMetric]
+
+
+class DeliverySlide(BaseModel):
+    type: str
+    tag: str = ""
+    title: str
+    subtitle: str | None = None
+    bullets: list[str] = Field(default_factory=list)
+    modules: list[dict[str, Any]] = Field(default_factory=list)
+    timeline: dict[str, list[str]] = Field(default_factory=dict)
+
+
+class DeliverySummaryCard(BaseModel):
+    headline: str
+    scope: str
+    modules: list[str] = Field(default_factory=list)
+    key_actions: list[str] = Field(default_factory=list)
+    timeline: str = "30-60-90 day execution path"
+
+
+class DeliveryGenerateRequest(BaseModel):
+    analysis: dict[str, Any] = Field(default_factory=dict)
+    requirement_document: RequirementDocument | None = None
+    functions: FunctionDecompositionResponse
+    context: dict[str, Any] = Field(default_factory=dict)
+
+
+class DeliveryGenerateResponse(BaseModel):
+    plan: DeliveryPlan
+    slides: list[DeliverySlide]
+    summary_card: DeliverySummaryCard

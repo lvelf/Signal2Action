@@ -1354,47 +1354,53 @@
 
   .slide-viewport {
     aspect-ratio: 16/9;
-    background: var(--ink);
+    background: #fff;
     border-radius: 16px;
     overflow: hidden;
     position: relative;
+    border: 1px solid var(--stone);
+    box-shadow: 0 18px 48px rgba(26,23,20,0.08);
   }
 
   .slide {
     position: absolute;
     inset: 0;
-    padding: 10%;
+    padding: 7% 8%;
     display: none;
     flex-direction: column;
     justify-content: center;
   }
   .slide.active { display: flex; }
-  .slide.slide-title { background: var(--ink); }
-  .slide.slide-light { background: var(--cream); }
-  .slide.slide-accent { background: var(--blue); }
-  .slide.slide-dark { background: #111; }
+  .slide.slide-title,
+  .slide.slide-light,
+  .slide.slide-accent,
+  .slide.slide-dark,
+  .slide.slide-consulting { background: #fff; }
 
   .slide-tag-text {
     font-family: 'DM Mono', monospace;
     font-size: clamp(8px, 1vw, 11px);
     letter-spacing: 3px;
     text-transform: uppercase;
-    color: rgba(255,255,255,0.35);
+    color: var(--blue);
     margin-bottom: 16px;
+    border-bottom: 2px solid var(--blue);
+    padding-bottom: 10px;
+    width: fit-content;
   }
   .slide-h1 {
     font-family: 'DM Serif Display', serif;
     font-size: clamp(28px, 4.5vw, 52px);
     letter-spacing: -1.5px;
     line-height: 1.1;
-    color: #fff;
+    color: var(--ink);
     margin-bottom: 12px;
   }
   .slide-h1.dark { color: var(--ink); }
   .slide-h1.blue { color: #fff; }
   .slide-sub-text {
     font-size: clamp(11px, 1.5vw, 15px);
-    color: rgba(255,255,255,0.45);
+    color: var(--ink2);
     line-height: 1.6;
     font-weight: 300;
     max-width: 70%;
@@ -1410,14 +1416,14 @@
     display: flex;
     gap: 10px;
     font-size: clamp(10px, 1.3vw, 14px);
-    color: rgba(255,255,255,0.7);
+    color: var(--ink2);
     line-height: 1.5;
     font-weight: 300;
   }
   .slide-bullet.dark { color: var(--ink2); }
   .slide-bullet::before {
-    content: '—';
-    color: rgba(255,255,255,0.25);
+    content: '•';
+    color: var(--blue);
     flex-shrink: 0;
     font-family: 'DM Mono', monospace;
   }
@@ -1429,20 +1435,20 @@
     margin-top: 16px;
   }
   .slide-module-box {
-    background: rgba(255,255,255,0.06);
-    border: 0.5px solid rgba(255,255,255,0.1);
+    background: #f8fafc;
+    border: 1px solid rgba(37,99,235,0.12);
     border-radius: 8px;
     padding: 10px 12px;
   }
   .slide-module-name {
     font-size: clamp(9px, 1.1vw, 12px);
-    color: rgba(255,255,255,0.8);
+    color: var(--ink);
     font-weight: 500;
     margin-bottom: 3px;
   }
   .slide-module-desc {
     font-size: clamp(8px, 0.9vw, 10px);
-    color: rgba(255,255,255,0.35);
+    color: var(--ink3);
     line-height: 1.4;
   }
   .slide-footer {
@@ -1457,14 +1463,14 @@
   .slide-footer-brand {
     font-family: 'DM Serif Display', serif;
     font-size: clamp(8px, 1vw, 11px);
-    color: rgba(255,255,255,0.15);
+    color: rgba(26,23,20,0.28);
     letter-spacing: -0.2px;
   }
   .slide-footer-brand.dark { color: rgba(26,23,20,0.2); }
   .slide-page {
     font-family: 'DM Mono', monospace;
     font-size: clamp(7px, 0.8vw, 10px);
-    color: rgba(255,255,255,0.15);
+    color: rgba(26,23,20,0.28);
   }
   .slide-page.dark { color: rgba(26,23,20,0.2); }
   .slide-accent-bar {
@@ -1480,25 +1486,25 @@
     margin-top: 16px;
   }
   .timeline-col {
-    background: rgba(255,255,255,0.05);
+    background: #f8fafc;
     border-radius: 8px;
     padding: 10px 12px;
-    border-top: 2px solid rgba(255,255,255,0.15);
+    border-top: 3px solid var(--blue);
   }
   .timeline-label {
     font-family: 'DM Mono', monospace;
     font-size: clamp(8px, 0.8vw, 10px);
     letter-spacing: 1.5px;
     text-transform: uppercase;
-    color: rgba(255,255,255,0.3);
+    color: var(--blue);
     margin-bottom: 8px;
   }
   .timeline-item {
     font-size: clamp(9px, 1vw, 11px);
-    color: rgba(255,255,255,0.6);
+    color: var(--ink2);
     line-height: 1.5;
     padding: 3px 0;
-    border-bottom: 0.5px solid rgba(255,255,255,0.05);
+    border-bottom: 0.5px solid rgba(26,23,20,0.08);
     font-weight: 300;
   }
   .timeline-item:last-child { border-bottom: none; }
@@ -2661,26 +2667,61 @@ function getMockFunctions(analysis) {
 }
 
 function getMockDeliverables(analysis, functions) {
-  const modules = functions.modules;
+  return buildConsultingDeliverables(analysis, functions, state.requirementDocument);
+}
+
+function buildConsultingDeliverables(analysis, functions, requirementDocument = null) {
+  const modules = functions.modules || [];
+  const doc = requirementDocument || {};
+  const problemTitle = doc.title || (analysis.clarified_problem || '').split('.')[0] || 'Consulting Requirement';
+  const recommendations = [
+    ...(doc.next_steps || []),
+    ...(doc.success_metrics || []).map(metric => `Define success metric: ${metric}`),
+    'Align owners, decision rights, and cadence before execution begins',
+  ].slice(0, 5);
+  const implications = [
+    ...(doc.risks || []),
+    ...(doc.constraints || []),
+    ...(analysis.assumptions || []),
+  ].slice(0, 5);
+  const timeline = buildRoadmapTimeline(doc, modules);
   return {
     slides: [
-      { type:'title', tag:'Signal2Action', title: analysis.clarified_problem.split('.')[0], subtitle: analysis.scope },
-      { type:'problem', tag:'Current State', title:'The challenge', bullets: analysis.assumptions },
-      { type:'modules', tag:'Functional Architecture', title:'Module breakdown', modules: modules.slice(0,6) },
-      { type:'solution', tag:'Recommendations', title:'Proposed solution', bullets: ['Prioritize data foundation before analysis — bad data produces bad insights','Address root causes in sequence: diagnostic → structural → operational','Reserve 20% of timeline for stakeholder alignment and change management','Build monitoring into the plan from day one, not as an afterthought'] },
-      { type:'timeline', tag:'Action Plan', title:'30 · 60 · 90 day roadmap', timeline: {
-        '30 days': ['Complete data audit', 'Root cause validated', 'Stakeholders aligned'],
-        '60 days': ['Solution designed', 'Resources committed', 'Pilot launched'],
-        '90 days': ['Full rollout begun', 'KPIs tracking', 'First review complete']
-      }}
+      { type:'title', tag:'Client Discussion Draft', title: problemTitle, subtitle: analysis.scope || doc.executive_summary },
+      { type:'problem', tag:'Executive Summary', title:'What needs to be solved', bullets: [doc.executive_summary, ...(doc.objectives || [])].filter(Boolean).slice(0,5) },
+      { type:'problem', tag:'Situation & Implications', title:'Current state creates execution risk', bullets: implications },
+      { type:'modules', tag:'Workstream Architecture', title:'Functional modules required to deliver', modules: modules.slice(0,6) },
+      { type:'solution', tag:'Recommendations', title:'Recommended path forward', bullets: recommendations },
+      { type:'timeline', tag:'Implementation Roadmap', title:'30 / 60 / 90 day action plan', timeline }
     ],
     summary_card: {
-      headline: analysis.clarified_problem.split('.')[0],
+      headline: problemTitle,
       scope: analysis.scope,
       modules: modules.map(m => m.name),
-      key_actions: ['Establish data baseline and validate root cause hypothesis', 'Design solution with 3 trade-off scenarios', 'Launch 90-day implementation roadmap'],
-      timeline: '30–90 days to first impact'
+      key_actions: recommendations.slice(0, 4),
+      timeline: '30-60-90 day execution path'
     }
+  };
+}
+
+function buildRoadmapTimeline(doc, modules) {
+  const moduleNames = (modules || []).map(m => m.name);
+  return {
+    '30 days': [
+      moduleNames[0] ? `Launch ${moduleNames[0]}` : 'Confirm scope and decision criteria',
+      'Validate current-state baseline and key assumptions',
+      'Align stakeholder owners and governance cadence',
+    ],
+    '60 days': [
+      moduleNames[1] ? `Complete ${moduleNames[1]}` : 'Complete detailed solution design',
+      moduleNames[2] ? `Stand up ${moduleNames[2]}` : 'Prioritize workstreams and dependencies',
+      'Prepare implementation plan and risk controls',
+    ],
+    '90 days': [
+      moduleNames[3] ? `Begin execution of ${moduleNames[3]}` : 'Launch prioritized roadmap',
+      (doc.success_metrics || [])[0] || 'Track success metrics and operating cadence',
+      'Run executive review and next-wave planning',
+    ],
   };
 }
 
@@ -2916,27 +2957,40 @@ async function runGenerateDeliverables() {
   animateLoadingSteps('dl-', 3, 1000);
 
   try {
-    let deliverables;
-    if (isLiveMode()) {
-      const systemPrompt = `You are a consulting deliverable generator. Create presentation slides and a summary card. Return ONLY valid JSON with this exact schema:
-{"slides":[{"type":"title|problem|modules|solution|timeline","tag":"string","title":"string","subtitle":"string","bullets":["string"],"modules":[{"name":"string","description":"string"}],"timeline":{"30 days":["string"],"60 days":["string"],"90 days":["string"]}}],"summary_card":{"headline":"string","scope":"string","modules":["string"],"key_actions":["string"],"timeline":"string"}}
-Generate exactly 5 slides: title, problem, modules, solution, timeline.`;
-      const userMsg = `Problem: ${state.analysis.clarified_problem}\nScope: ${state.analysis.scope}\nModules: ${(state.functions.modules||[]).map(m=>m.name).join(', ')}\nCritical path: ${(state.functions.critical_path||[]).join(' → ')}`;
-      deliverables = await callClaude(systemPrompt, userMsg);
-    } else {
-      await new Promise(r => setTimeout(r, 3200));
-      deliverables = getMockDeliverables(state.analysis, state.functions);
-    }
+    const deliverables = await callReqANADelivery();
     state.deliverables = deliverables;
     state.currentSlide = 0;
     renderPPT(deliverables.slides);
     renderDisplayCard(deliverables.summary_card);
   } catch (err) {
+    console.error(err);
     state.deliverables = getMockDeliverables(state.analysis, state.functions);
     state.currentSlide = 0;
     renderPPT(state.deliverables.slides);
     renderDisplayCard(state.deliverables.summary_card);
   }
+}
+
+async function callReqANADelivery() {
+  if (!state.analysis || !state.functions) {
+    throw new Error('Requirement analysis and function decomposition must run before delivery generation.');
+  }
+
+  const response = await fetch(`${REQANA_API_BASE}/delivery/generate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      analysis: state.analysis || {},
+      requirement_document: state.requirementDocument || null,
+      functions: state.functions,
+      context: state.context || {},
+    }),
+  });
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({}));
+    throw new Error(payload.detail || `Delivery generation failed with ${response.status}`);
+  }
+  return response.json();
 }
 
 /* ─── PPT RENDERER ───────────────────────────────── */
@@ -2969,11 +3023,10 @@ function renderPPT(slides) {
 }
 
 function getSlideClass(type) {
-  return {title:'slide-title', problem:'slide-dark', modules:'slide-title', solution:'slide-dark', timeline:'slide-title'}[type] || 'slide-title';
+  return 'slide-consulting';
 }
 
 function buildSlideHTML(s, i, total) {
-  const isLight = false;
   let body = '';
   if (s.type === 'title') {
     body = `<div class="slide-tag-text">${s.tag||''}</div>
@@ -2982,7 +3035,7 @@ function buildSlideHTML(s, i, total) {
   } else if (s.type === 'problem' || s.type === 'solution') {
     body = `<div class="slide-tag-text">${s.tag||''}</div>
       <div class="slide-h1">${s.title||''}</div>
-      <div class="slide-bullets">${(s.bullets||[]).map(b=>`<div class="slide-bullet">${b}</div>`).join('')}</div>`;
+      <div class="slide-bullets">${(s.bullets||[]).filter(Boolean).map(b=>`<div class="slide-bullet">${b}</div>`).join('')}</div>`;
   } else if (s.type === 'modules') {
     body = `<div class="slide-tag-text">${s.tag||''}</div>
       <div class="slide-h1">${s.title||''}</div>
