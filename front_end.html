@@ -6,6 +6,8 @@
 <title>Signal2Action — Turn Ambiguity Into Action</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://apis.google.com/js/api.js" async defer></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -726,7 +728,7 @@
 
   .req-input-toolbar {
     display: grid;
-    grid-template-columns: minmax(0, 1.5fr) auto auto auto;
+    grid-template-columns: minmax(0, 1.5fr) auto auto auto auto;
     gap: 12px;
     align-items: stretch;
   }
@@ -1942,7 +1944,7 @@
           </div>
         </div>
 
-        <button class="req-tool-btn" id="drive-upload-btn" type="button" onclick="openRequirementFilePicker()">
+        <button class="req-tool-btn" id="drive-upload-btn" type="button" onclick="handleGoogleDriveImport()">
           <div class="req-tool-btn-top">
             <div class="req-tool-icon drive">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -1952,11 +1954,27 @@
               </svg>
             </div>
             <div class="req-tool-label">
-              <strong>Files</strong>
+              <strong>Google Drive</strong>
+              <span>Select files or folders</span>
+            </div>
+          </div>
+          <div class="req-tool-status" id="drive-upload-status">Connect Drive</div>
+        </button>
+
+        <button class="req-tool-btn" id="local-file-btn" type="button" onclick="openRequirementFilePicker()">
+          <div class="req-tool-btn-top">
+            <div class="req-tool-icon drive">
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.75 6.75h14.5v10.5H4.75z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h8M8 14h5"/>
+              </svg>
+            </div>
+            <div class="req-tool-label">
+              <strong>Local files</strong>
               <span>Upload req docs</span>
             </div>
           </div>
-          <div class="req-tool-status" id="drive-upload-status">Choose files</div>
+          <div class="req-tool-status" id="local-file-status">Choose files</div>
         </button>
         <input class="hidden-file-input" id="requirement-files" type="file" multiple accept=".txt,.md,.csv,.json,.yaml,.yml,.tsv,.xlsx,.xlsm" onchange="handleRequirementFilesChange()">
 
@@ -1996,6 +2014,7 @@
       <div class="req-inline-meta" id="req-inline-meta">
         <div class="meta-pill" id="input-mode-pill"><strong>INPUT</strong><span>Text only</span></div>
         <div class="meta-pill" id="drive-file-pill"><strong>FILES</strong><span>No files selected</span></div>
+        <div class="meta-pill" id="google-drive-pill"><strong>DRIVE</strong><span>Not connected</span></div>
         <div class="meta-pill" id="audio-file-pill"><strong>AUDIO</strong><span>No audio selected</span></div>
         <div class="meta-pill" id="voice-pill"><strong>VOICE</strong><span>Idle</span></div>
       </div>
@@ -2249,7 +2268,12 @@ let state = {
   deliverables: null,
   currentSlide: 0,
   attachments: {
-    googleDrive: null,
+    googleDrive: {
+      accessToken: '',
+      files: [],
+      folders: [],
+      recursive: false,
+    },
     files: [],
     voiceTranscript: '',
     audioFiles: [],
@@ -2299,6 +2323,7 @@ function updateInputModePill() {
   const sources = [];
   if (problem) sources.push('Text');
   if (state.attachments.files?.length) sources.push('Files');
+  if (state.attachments.googleDrive?.files?.length || state.attachments.googleDrive?.folders?.length) sources.push('Drive');
   if (state.attachments.audioFiles?.length) sources.push('Audio files');
   if (state.attachments.audioBlobs?.length || state.attachments.voiceTranscript) sources.push('Recorded voice');
   document.querySelector('#input-mode-pill span').textContent = sources.length ? sources.join(' + ') : 'Text only';
@@ -2315,6 +2340,12 @@ function appendToProblemInput(text, prefix = '') {
 
 function updateDriveUi(label, statusText) {
   document.querySelector('#drive-file-pill span').textContent = label;
+  document.getElementById('local-file-status').textContent = statusText;
+  updateInputModePill();
+}
+
+function updateGoogleDriveUi(label, statusText) {
+  document.querySelector('#google-drive-pill span').textContent = label;
   document.getElementById('drive-upload-status').textContent = statusText;
   updateInputModePill();
 }
@@ -2333,6 +2364,110 @@ function handleRequirementFilesChange() {
   }
   const label = count === 1 ? state.attachments.files[0].name : `${count} files selected`;
   updateDriveUi(label, 'Files ready');
+}
+
+async function getGoogleConfig() {
+  if (window.GOOGLE_CLIENT_ID && window.GOOGLE_API_KEY && window.GOOGLE_APP_ID) {
+    return {
+      clientId: window.GOOGLE_CLIENT_ID,
+      apiKey: window.GOOGLE_API_KEY,
+      appId: window.GOOGLE_APP_ID,
+    };
+  }
+
+  const response = await fetch(`${REQANA_API_BASE}/config/google`);
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({}));
+    throw new Error(payload.detail || 'Google Drive config is missing on the reqANA backend.');
+  }
+  const config = await response.json();
+  return {
+    clientId: config.client_id,
+    apiKey: config.api_key,
+    appId: config.app_id,
+  };
+}
+
+async function handleGoogleDriveImport() {
+  try {
+    updateGoogleDriveUi('Connecting...', 'Authorizing');
+    const config = await getGoogleConfig();
+    const token = await requestGoogleDriveToken(config.clientId);
+    state.attachments.googleDrive.accessToken = token;
+    await openGooglePicker(config, token);
+  } catch (error) {
+    console.error(error);
+    window.alert(error.message || 'Google Drive connection failed.');
+  }
+}
+
+function requestGoogleDriveToken(clientId) {
+  return new Promise((resolve, reject) => {
+    if (!window.google?.accounts?.oauth2) {
+      reject(new Error('Google Identity Services is not loaded yet. Refresh the page and try again.'));
+      return;
+    }
+    const tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: clientId,
+      scope: 'https://www.googleapis.com/auth/drive.readonly',
+      callback: response => {
+        if (response.error) {
+          reject(new Error(response.error));
+          return;
+        }
+        resolve(response.access_token);
+      },
+    });
+    tokenClient.requestAccessToken({ prompt: '' });
+  });
+}
+
+function openGooglePicker(config, accessToken) {
+  return new Promise((resolve, reject) => {
+    if (!window.gapi) {
+      reject(new Error('Google Picker API is not loaded yet. Refresh the page and try again.'));
+      return;
+    }
+    gapi.load('picker', () => {
+      const docsView = new google.picker.DocsView(google.picker.ViewId.DOCS)
+        .setIncludeFolders(true)
+        .setSelectFolderEnabled(true);
+      const picker = new google.picker.PickerBuilder()
+        .setDeveloperKey(config.apiKey)
+        .setAppId(config.appId)
+        .setOAuthToken(accessToken)
+        .enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
+        .addView(docsView)
+        .setCallback(data => {
+          if (data.action === google.picker.Action.CANCEL) {
+            resolve();
+            return;
+          }
+          if (data.action !== google.picker.Action.PICKED) return;
+          const docs = data.docs || [];
+          state.attachments.googleDrive.files = [];
+          state.attachments.googleDrive.folders = [];
+          docs.forEach(doc => {
+            const item = { id: doc.id, name: doc.name || doc.id, mimeType: doc.mimeType || '' };
+            if (item.mimeType === 'application/vnd.google-apps.folder') {
+              state.attachments.googleDrive.folders.push(item);
+            } else {
+              state.attachments.googleDrive.files.push(item);
+            }
+          });
+          const fileCount = state.attachments.googleDrive.files.length;
+          const folderCount = state.attachments.googleDrive.folders.length;
+          const label = [
+            fileCount ? `${fileCount} file${fileCount === 1 ? '' : 's'}` : '',
+            folderCount ? `${folderCount} folder${folderCount === 1 ? '' : 's'}` : '',
+          ].filter(Boolean).join(' + ') || 'No Drive files selected';
+          updateGoogleDriveUi(label, 'Drive ready');
+          resolve();
+        })
+        .build();
+      picker.setVisible(true);
+    });
+  });
 }
 
 function updateAudioFileUi(label, statusText) {
@@ -2362,32 +2497,6 @@ function updateVoiceUi(statusText, pillText, isRecording = false) {
   document.querySelector('#voice-pill span').textContent = pillText;
   document.getElementById('voice-run-btn').classList.toggle('recording', isRecording);
   updateInputModePill();
-}
-
-function extractDriveName(url) {
-  try {
-    const parsed = new URL(url);
-    if (!/drive\.google\.com$/.test(parsed.hostname)) return 'Drive link';
-    return parsed.searchParams.get('id') || parsed.pathname.split('/').filter(Boolean).pop() || 'Drive file';
-  } catch {
-    return 'Drive file';
-  }
-}
-
-function handleGoogleDriveImport() {
-  const driveLink = window.prompt('Paste a Google Drive share link for the requirement doc.');
-  if (!driveLink) return;
-
-  const trimmed = driveLink.trim();
-  if (!trimmed.includes('drive.google.com')) {
-    window.alert('Please paste a valid Google Drive share link.');
-    return;
-  }
-
-  const fileName = extractDriveName(trimmed);
-  state.attachments.googleDrive = { url: trimmed, name: fileName };
-  updateDriveUi(fileName, 'Drive linked');
-  appendToProblemInput(`Google Drive reference: ${trimmed}`, '[Attached context]');
 }
 
 async function toggleVoiceCapture() {
@@ -2594,8 +2703,10 @@ async function runAnalysis() {
   const files = state.attachments.files || [];
   const audioFiles = state.attachments.audioFiles || [];
   const audioBlobs = state.attachments.audioBlobs || [];
-  if ((!problem || problem.length < 20) && !files.length && !audioFiles.length && !audioBlobs.length) {
-    window.alert('Add text, choose at least one file, or record at least one voice note.');
+  const drive = state.attachments.googleDrive || {};
+  const driveItems = (drive.files?.length || 0) + (drive.folders?.length || 0);
+  if ((!problem || problem.length < 20) && !files.length && !driveItems && !audioFiles.length && !audioBlobs.length) {
+    window.alert('Add text, choose at least one local/Drive file, upload audio, or record a voice note.');
     return;
   }
 
@@ -2634,7 +2745,6 @@ async function callReqANAFromMixed() {
     state.context.industry ? `Industry: ${state.context.industry}` : '',
     state.context.companySize ? `Company size: ${state.context.companySize}` : '',
     state.context.timeHorizon ? `Time horizon: ${state.context.timeHorizon}` : '',
-    state.attachments.googleDrive ? `Google Drive reference: ${state.attachments.googleDrive.url}` : '',
     state.attachments.voiceTranscript ? `[Voice transcript]\n${state.attachments.voiceTranscript}` : '',
   ].filter(Boolean);
   if (contextLines.length) formData.append('text', contextLines.join('\n'));
@@ -2650,6 +2760,18 @@ async function callReqANAFromMixed() {
   (state.attachments.audioBlobs || []).forEach((blob, index) => {
     formData.append('audio_files', blob, `requirement-audio-${index + 1}.webm`);
   });
+
+  const drive = state.attachments.googleDrive;
+  if (drive?.accessToken) {
+    formData.append('google_access_token', drive.accessToken);
+    formData.append('google_recursive', drive.recursive ? 'true' : 'false');
+    for (const file of drive.files || []) {
+      formData.append('google_file_ids', file.id);
+    }
+    for (const folder of drive.folders || []) {
+      formData.append('google_folder_ids', folder.id);
+    }
+  }
 
   const response = await fetch(`${REQANA_API_BASE}/requirements/from-mixed`, {
     method: 'POST',
@@ -2964,7 +3086,12 @@ function resetAll() {
     deliverables:null,
     currentSlide:0,
     attachments: {
-      googleDrive: null,
+      googleDrive: {
+        accessToken: '',
+        files: [],
+        folders: [],
+        recursive: false,
+      },
       files: [],
       voiceTranscript: '',
       audioFiles: [],
@@ -2985,6 +3112,7 @@ function resetAll() {
   document.getElementById('req-results').classList.add('hidden');
   document.getElementById('analyze-btn').disabled = false;
   updateDriveUi('No files selected', 'Choose files');
+  updateGoogleDriveUi('Not connected', 'Connect Drive');
   updateAudioFileUi('No audio selected', 'Choose audio');
   updateVoiceUi('Tap to record', 'Idle');
   goToStep(1);
@@ -3004,6 +3132,7 @@ document.addEventListener('keydown', e => {
 });
 
 updateDriveUi('No files selected', 'Choose files');
+updateGoogleDriveUi('Not connected', 'Connect Drive');
 updateAudioFileUi('No audio selected', 'Choose audio');
 updateVoiceUi('Tap to record', 'Idle');
 </script>

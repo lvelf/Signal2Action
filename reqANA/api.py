@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import os
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
@@ -9,6 +10,7 @@ from pydantic import BaseModel, Field
 
 from reqANA.agent import RequirementAgent, render_markdown, save_markdown
 from reqANA.file_loader import read_requirement_file
+from reqANA.google_drive_loader import read_google_drive_inputs
 from reqANA.models import IntakeSource, RequirementDocument, RequirementInput
 from reqANA.transcription import AudioTranscriber
 
@@ -44,6 +46,12 @@ class VerisResponse(BaseModel):
     response: str
 
 
+class GoogleConfigResponse(BaseModel):
+    client_id: str
+    api_key: str
+    app_id: str
+
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
@@ -52,8 +60,6 @@ def health() -> dict[str, str]:
 @app.get("/debug/config")
 def debug_config() -> dict[str, str | int | bool | None]:
     """Show non-secret runtime config loaded by the API process."""
-    import os
-
     baseten_key = os.getenv("BASETEN_API_KEY", "")
     return {
         "model_provider": os.getenv("MODEL_PROVIDER"),
@@ -63,6 +69,19 @@ def debug_config() -> dict[str, str | int | bool | None]:
         "baseten_api_key_length": len(baseten_key),
         "baseten_api_key_masked": _mask_secret(baseten_key),
     }
+
+
+@app.get("/config/google", response_model=GoogleConfigResponse)
+def google_config() -> GoogleConfigResponse:
+    client_id = os.getenv("GOOGLE_CLIENT_ID", "").strip()
+    api_key = os.getenv("GOOGLE_API_KEY", "").strip()
+    app_id = os.getenv("GOOGLE_APP_ID", "").strip()
+    if not client_id or not api_key or not app_id:
+        raise HTTPException(
+            status_code=500,
+            detail="Google Drive config is missing. Set GOOGLE_CLIENT_ID, GOOGLE_API_KEY, and GOOGLE_APP_ID in .env.",
+        )
+    return GoogleConfigResponse(client_id=client_id, api_key=api_key, app_id=app_id)
 
 
 @app.post("/requirements/from-text", response_model=RequirementResponse)
@@ -133,6 +152,10 @@ async def requirements_from_mixed(
     audio: UploadFile | None = File(default=None),
     audio_files: list[UploadFile] | None = File(default=None),
     text: str | None = Form(default=None),
+    google_access_token: str | None = Form(default=None),
+    google_file_ids: list[str] | None = Form(default=None),
+    google_folder_ids: list[str] | None = Form(default=None),
+    google_recursive: bool = Form(default=False),
 ) -> RequirementResponse:
     """Generate requirements from browser FormData.
 
@@ -141,12 +164,24 @@ async def requirements_from_mixed(
     - files: zero or more requirement files; append this key once per file
     - audio: optional single recorded audio blob/file
     - audio_files: optional repeated recorded audio blobs/files
+    - google_access_token: optional Google OAuth access token with Drive read scope
+    - google_file_ids: optional repeated Google Drive file IDs
+    - google_folder_ids: optional repeated Google Drive folder IDs
+    - google_recursive: whether to read folders recursively
     """
     inputs: list[RequirementInput] = []
     if text:
         inputs.append(RequirementInput(source=IntakeSource.TEXT, content=text))
 
     inputs.extend(await _read_uploads(files or []))
+    inputs.extend(
+        _read_google_drive_uploads(
+            google_access_token=google_access_token,
+            google_file_ids=google_file_ids or [],
+            google_folder_ids=google_folder_ids or [],
+            google_recursive=google_recursive,
+        )
+    )
 
     audio_uploads = []
     if _has_upload(audio):
@@ -214,3 +249,24 @@ async def _read_uploads(files: list[UploadFile]) -> list[RequirementInput]:
             raise HTTPException(status_code=400, detail=f"{file.filename}: {exc}") from exc
         inputs.append(RequirementInput(source=IntakeSource.FILE, content=content, filename=file.filename))
     return inputs
+
+
+def _read_google_drive_uploads(
+    google_access_token: str | None,
+    google_file_ids: list[str],
+    google_folder_ids: list[str],
+    google_recursive: bool,
+) -> list[RequirementInput]:
+    if not google_access_token or (not google_file_ids and not google_folder_ids):
+        return []
+    try:
+        return read_google_drive_inputs(
+            access_token=google_access_token,
+            file_ids=google_file_ids,
+            folder_ids=google_folder_ids,
+            recursive=google_recursive,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=f"Google Drive file error: {exc}") from exc
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Google Drive import failed: {exc}") from exc

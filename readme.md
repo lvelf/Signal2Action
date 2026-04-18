@@ -154,4 +154,66 @@ Built at **Veris Agent Jam — Enterprise AI Agent Hackathon**
 
 *Signal2Action: from ambiguity to action, one agent at a time.*
 
+---
 
+## Local reqANA API
+
+Run the backend:
+
+```bash
+uvicorn reqANA.api:app --reload --port 8001
+```
+
+Run the frontend:
+
+```bash
+python -m http.server 5500
+```
+
+Open:
+
+```text
+http://127.0.0.1:5500/front_end.html
+```
+
+The requirement intake UI posts to:
+
+```text
+POST http://127.0.0.1:8001/requirements/from-mixed
+```
+
+Supported input fields:
+
+- `text`
+- `files`
+- `audio_files`
+- `google_access_token`
+- `google_file_ids`
+- `google_folder_ids`
+
+## Google Drive Setup
+
+To use Google Drive selection in the frontend:
+
+1. Create a Google Cloud project.
+2. Enable Google Drive API and Google Picker API.
+3. Create an OAuth Client ID for a web app.
+4. Create an API key.
+5. Add `http://127.0.0.1:5500` to authorized JavaScript origins.
+
+Set these in `.env`:
+
+```bash
+GOOGLE_CLIENT_ID=your_oauth_client_id.apps.googleusercontent.com
+GOOGLE_API_KEY=your_google_api_key
+GOOGLE_APP_ID=your_google_cloud_project_number
+```
+
+When you click Google Drive in the frontend, the page calls `/config/google`,
+then opens Google auth and the Drive Picker directly.
+
+The required values are:
+
+- Google OAuth Client ID
+- Google API Key
+- Google Cloud Project Number / App ID

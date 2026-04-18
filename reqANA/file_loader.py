@@ -14,13 +14,18 @@ SUPPORTED_EXTENSIONS = SUPPORTED_TEXT_EXTENSIONS | SUPPORTED_EXCEL_EXTENSIONS
 
 async def read_requirement_file(file: UploadFile) -> str:
     suffix = Path(file.filename or "").suffix.lower()
+    raw = await file.read()
+    return read_requirement_bytes(file.filename or "uploaded-file", raw)
+
+
+def read_requirement_bytes(filename: str, raw: bytes) -> str:
+    suffix = Path(filename).suffix.lower()
     if suffix not in SUPPORTED_EXTENSIONS:
         raise ValueError(
             f"Unsupported requirement file type '{suffix}'. "
             f"Supported: {', '.join(sorted(SUPPORTED_EXTENSIONS))}."
         )
 
-    raw = await file.read()
     if suffix in SUPPORTED_EXCEL_EXTENSIONS:
         return _read_excel(raw)
     return raw.decode("utf-8")
