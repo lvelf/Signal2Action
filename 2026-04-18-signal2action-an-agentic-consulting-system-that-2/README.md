@@ -24,9 +24,9 @@ This repo is intentionally built as a modular workflow system, not a chatbot. Th
 - `VoiceRun`: voice transcript entry point with mock transcript fallback
 - `You.com`: external context enrichment in assessment with local mock search fallback
 - `Baseten`: solution/action-planning inference backend with mock fallback
-- `Veris`: simulation and QA adapter with local mock mode
+- `Veris`: simulation and QA adapter with `mock`, `auto`, and `live` modes
 
-Live integrations are intentionally kept behind adapter interfaces and environment variables. Where exact API payloads are unknown, the code includes clear `TODO` notes instead of inventing SDK calls.
+Live integrations are intentionally kept behind adapter interfaces and environment variables. The Veris adapter uses the official `veris` CLI for live submissions, including API-key login for headless environments. Where exact API payloads are unknown, the code keeps the integration at the documented CLI boundary instead of inventing unsupported SDK calls.
 
 ## Repo Structure
 
@@ -53,6 +53,27 @@ Live integrations are intentionally kept behind adapter interfaces and environme
 ### 1. Configure environment
 
 Copy `.env.example` to `.env` and adjust values as needed. The default configuration runs entirely in mock mode, which is the recommended hackathon demo path.
+
+To enable Veris live submissions for the final QA stage:
+
+```bash
+VERIS_MODE=live
+MOCK_ALL_SERVICES=false
+MOCK_VERIS=false
+VERIS_API_KEY=...
+VERIS_BACKEND_URL=https://sandbox.api.veris.ai
+VERIS_ENVIRONMENT_ID=env_...
+VERIS_SCENARIO_SET_ID=scnset_...
+```
+
+Install and authenticate the Veris CLI if needed:
+
+```bash
+uv tool install veris-cli
+veris login YOUR_API_KEY --backend-url https://sandbox.api.veris.ai
+```
+
+`VERIS_MODE=auto` keeps the old demo-friendly behavior and only uses live mode when the global/mock switches allow it.
 
 ### 2. Run the backend
 
@@ -86,6 +107,8 @@ You can:
 - click `Run Full Demo` to execute the full workflow in one call
 - run each stage manually to show the handoffs and human review step
 - edit the approved scope before assessment to demonstrate control and governance
+
+The Veris integration is used at the final `simulate` stage. `POST /api/run-demo` runs the full workflow and then submits the assembled QA payload through `run_simulation(...)`, which calls `VerisAdapter.simulate(...)`.
 
 ## Seed Script
 
